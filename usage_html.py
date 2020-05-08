@@ -6,6 +6,7 @@ from storage import Storage
 from accounts import Account
 from hosts import Host
 from limits import Limit, LimitSet
+from filtering import Filtering
 from marks import Mark
 from additionals import Additionals
 from reports import AccountsReport, HtmlReport
@@ -31,17 +32,16 @@ kk_limit = LimitSet(lnames).set('1 day',  4*GiB).set('3 days',  12*GiB).set('7 d
 cc_limit = LimitSet(lnames).set('1 day',  8*GiB).set('3 days',  20*GiB).set('7 days',  30*GiB).set('14 days',  50*GiB).set('30 days',  70*GiB).set('90 days', 100*GiB)
 bm_limit = LimitSet(lnames).set('1 day', 80*MiB).set('3 days', 250*MiB).set('7 days', 500*MiB).set('14 days',   1*GiB).set('30 days',   2*GiB).set('90 days',   6*GiB)
 
-accounts = (Account('ok', 'Papa', ok_devs, ok_limit, Mark.M1MBIT),
-            Account('mm', 'Mama', mm_devs, mm_limit, Mark.M1MBIT),
+accounts = (Account('ok', 'Papa', ok_devs, ok_limit, Mark.M1MBIT, no_hardlimit = True),
+            Account('mm', 'Mama', mm_devs, mm_limit, Mark.M1MBIT, no_hardlimit = True),
             Account('vo', 'Vincent', vo_devs, kk_limit, Mark.M512KBIT),
             Account('ie', 'Iris', ie_devs, kk_limit, Mark.M512KBIT),
             Account('aa', 'Afina', aa_devs, kk_limit, Mark.M512KBIT),
             Account('hd', 'Home', hd_devs, cc_limit, Mark.M256KBIT),
-            Account('se', 'School', se_devs, cc_limit, Mark.M1MBIT),
+            Account('se', 'School', se_devs, cc_limit, Mark.M1MBIT, no_hardlimit = True),
             Account('sc', 'Consoles', sc_devs, cc_limit, Mark.M512KBIT),
             Account('bm', 'Mining', bm_devs, bm_limit, Mark.M128KBIT),
-            Account('sv', 'Servers', sv_devs, cc_limit, Mark.M128KBIT))
-ignore_accounts = set(('sv', ))
+            Account('sv', 'Servers', sv_devs, cc_limit, Mark.M128KBIT, ignore = True))
 
 start_ts = dt(2020, 5, 3, 12, 0)
 days = 92
@@ -61,12 +61,15 @@ for limit_name in lnames:
 host_usage: Dict[str, Dict[p.Host, p.Usage]] = {}
 for limit_name in lnames:
     host_usage[limit_name] = reports.host_usage(start_ts, router, limit_name)
-account_usage_monthly = reports.account_usage_periodic(start_ts, router, days, period = 'month')
 account_usage_daily = reports.account_usage_periodic(start_ts, router, days, period = 'day')
 account_usage_hourly = reports.account_usage_periodic(start_ts, router, 14, period = 'hour')
 
 footer = '<div class="bigblock"><h1>TELIA</h1><img src="telia_state.png" alt="Telia state"></div>'
-html_report = HtmlReport(router, lnames, accounts, ignore_accounts, account_usage, host_usage,
-                         account_usage_monthly, account_usage_daily, account_usage_hourly,
-                         footer)
-html_report()
+with open(sys.argv[1], 'w') as fd:
+    html_report = HtmlReport(router, lnames, accounts, account_usage, host_usage,
+                             account_usage_daily, account_usage_hourly,
+                             footer, fd)
+    html_report()
+
+filtering = Filtering(lnames, accounts, account_usage)
+filtering.filter(directory, print)

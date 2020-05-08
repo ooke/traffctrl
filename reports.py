@@ -105,10 +105,8 @@ class HtmlReport(object):
                  router: str,
                  limit_names: Tuple[str, ...],
                  accounts: Tuple[p.Account, ...],
-                 ignore_accounts: Set[str],
                  account_usage: Dict[str, Dict[p.Account, p.Usage]],
                  host_usage: Dict[str, Dict[p.Host, p.Usage]],
-                 account_usage_monthly: Dict[str, Dict[p.Account, p.Usage]],
                  account_usage_daily: Dict[str, Dict[p.Account, p.Usage]],
                  account_usage_hourly: Dict[str, Dict[p.Account, p.Usage]],
                  footer: str = '',
@@ -116,10 +114,8 @@ class HtmlReport(object):
         self._router = router
         self._limit_names = limit_names
         self._accounts = accounts
-        self._ignore_accounts = ignore_accounts
         self._account_usage = account_usage
         self._host_usage = host_usage
-        self._account_usage_mounthly = account_usage_monthly
         self._account_usage_daily = account_usage_daily
         self._account_usage_hourly = account_usage_hourly
         self._output_stream = output_stream
@@ -181,7 +177,7 @@ class HtmlReport(object):
             print('<td class="tright" style="color: rgb(%d, %d, 0); font-weight: %s;">%s</td></tr>' \
                   % (red, yellow, weight, "%2.0f%%" % percent),
                   file = self._output_stream)
-            if account.short not in self._ignore_accounts:
+            if not account.ignore:
                 dat_sum += usage.dat
                 dat_full += usage.inp + usage.out
         print('<tr><th class="tright">%s</th><td class="tright" title="%s">%s</td><td>&nbsp;</td></tr></table>' \
@@ -247,7 +243,7 @@ class HtmlReport(object):
                          bytes2units(usage.inp + usage.out),
                          bytes2units(usage.dat)),
                       end = ' ', file = self._output_stream)
-                if account.short not in self._ignore_accounts:
+                if not account.ignore:
                     sum_usage[limit] += self._account_usage[limit][account]
                 sum_limits[limit] += p.Usage('tmp', dat = account.limit(limit).amount)
             print("</tr>", file = self._output_stream)
