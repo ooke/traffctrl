@@ -173,6 +173,7 @@ class HtmlReport(object):
             red, yellow, weight = 0, 0, 'normal'
             if percent > 50.: red = yellow = min(int(percent / 100 * 150 + 50), 255)
             if percent > 80.: red = min(int(percent / 100 * 150 + 105), 255)
+            if percent > 99.9: red, yellow = min(((percent - 40) / 100) * 255, 255), 0
             if percent > 120.: weight = 'bold'
             print('<td class="tright" style="color: rgb(%d, %d, 0); font-weight: %s;">%s</td></tr>' \
                   % (red, yellow, weight, "%2.0f%%" % percent),
@@ -271,27 +272,9 @@ class HtmlReport(object):
     def charts(self) -> None:
         print("""
 <div class="bigblock"><h1>DETAILS</h1>
-<span style="padding: 10px;">daily:
-<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 92, 1);">92&nbsp;days</button>
-<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 62, 1);">62&nbsp;days</button>
-<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 32, 1);">32&nbsp;days</button>
-<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 16, 1);">16&nbsp;days</button>
-<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily,  8, 1);">8&nbsp;days</button>
-</span>
-<span>&nbsp;&nbsp;&nbsp;</span>
-<span style="padding: 10px;">hourly:
-<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 14, 24);">14&nbsp;days</button>
-<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 7, 24);">7&nbsp;days</button>
-<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 4, 24);">4&nbsp;days</button>
-<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 2, 24);">2&nbsp;days</button>
-</span>
-<span>&nbsp;&nbsp;&nbsp;</span>
-<span style="padding: 10px;">days:
-<input type="text" id="days" value="92" size="3" onChange="draw_chart(null, null, null);"></input>
-<span>&nbsp;&nbsp;</span>
-<span style="padding: 10px;">offset:
-<input type="text" id="offset" value="0" size="3" onChange="draw_chart(null, null, null);"></input>
-</span>
+<span style="padding: 10px; margin: 10px;">daily:&nbsp;<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 92, 1);">92&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 62, 1);">62&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 32, 1);">32&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 16, 1);">16&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily,  8, 1);">8&nbsp;days</button>&nbsp;</span>
+<span style="padding: 10px; margin: 10px;">hourly:&nbsp;<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 14, 24);">14&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 7, 24);">7&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 4, 24);">4&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 2, 24);">2&nbsp;days</button>&nbsp;</span>
+<span style="padding: 10px; margin: 10px;">days:&nbsp;<input type="text" id="days" value="92" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;<span style="padding: 10px; margin: 10px;">offset:&nbsp;<input type="text" id="offset" value="0" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;</span>
 <div id="chart1" style="height: 400px;"></div>
 </div>""", file = self._output_stream)
         print("<script>", file = self._output_stream)

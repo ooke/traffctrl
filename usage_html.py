@@ -78,7 +78,7 @@ for limit_name in lnames:
 print('calculate daily report', flush = True)
 account_usage_daily = reports.account_usage_periodic(start_ts, router, days, period = 'day')
 print('calculate hourly report', flush = True)
-account_usage_hourly = reports.account_usage_periodic(start_ts, router, 14, period = 'hour')
+account_usage_hourly = reports.account_usage_periodic(start_ts, router, 31, period = 'hour')
 
 print('generate html file to %s' % repr(outfile), flush = True)
 footer = '<div class="bigblock"><h1>TELIA</h1><img src="telia_state.png" alt="Telia state"></div>'
