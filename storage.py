@@ -136,9 +136,16 @@ class Storage(protocols.Storage):
             sql_text = 'UPDATE data SET %s = ? WHERE id = ?' % column
             c.execute(sql_text, (data, idval))
     
-    def sum(self, start_ts: datetime, end_ts: datetime, flt: Optional[str] = None) -> protocols.Usage:
+    def sum(self, start_ts: datetime, end_ts: datetime,
+            flt: Optional[str] = None,
+            reference_column: str = 'host') -> Generator[protocols.Usage, None, None]:
         c = self._conn.cursor()
-        the_filter = '%s AND %s' % (ts2filter(start_ts, sign = '<'), ts2filter(end_ts, sign = '>', flt =  flt))
-        sql_text = 'SELECT SUM(dat_in), SUM(dat_out), SUM(dat_pkg), SUM(dat) FROM data WHERE %s' % the_filter
+        the_filter = '%s AND %s' % (ts2filter(start_ts, sign = '<'), ts2filter(end_ts, sign = '>'))
+        if flt is not None:
+            the_filter = '%s AND %s' % (the_filter, flt)
+        sql_text = 'SELECT %s, SUM(dat_in), SUM(dat_out), SUM(dat_pkg), SUM(dat) FROM data WHERE %s' \
+            % (reference_column, the_filter)
         c.execute(sql_text)
-        return protocols.Usage(*c.fetchone())
+        for row in c.fetchall():
+            yield protocols.Usage(*row)
+        return None

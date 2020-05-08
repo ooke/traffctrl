@@ -1,5 +1,5 @@
 check:
-	mypy --strict *.py
+	mypy --show-error-context --pretty --strict *.py
 
 test:
 	./tests.py

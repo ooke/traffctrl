@@ -12,11 +12,19 @@ class Host(Protocol):
     def namelist(self) -> Tuple[str, ...]: ...
     
 class Usage(NamedTuple):
-    inp: int
-    out: int
-    pkg: int
-    dat: int
+    ref: Optional[str]
+    inp: int = 0
+    out: int = 0
+    pkg: int = 0
+    dat: int = 0
 
+    def __add__(self, other: "Usage") -> "Usage": # type: ignore[override]
+        return Usage(self.ref, self.inp + other.inp, self.out + other.out,
+                     self.pkg + other.pkg, self.dat + other.dat)
+    def __sub__(self, other: "Usage") -> "Usage":
+        return Usage(self.ref, self.inp - other.inp, self.out - other.out,
+                     self.pkg - other.pkg, self.dat - other.dat)
+    
 DataRow = Tuple[int, str, int, int, int, int, int, int, int, int, int, str]
 
 class Entry(Protocol):
@@ -60,7 +68,9 @@ class Storage(Protocol):
                    flt: Optional[str] = None, direction: str = 'future',
                    args: Tuple[Any, ...] = tuple()) -> None: ...
     def update_entries(self, column: str, changes: Iterable[Tuple[int, Union[str, int]]]) -> None: ...
-    def sum(self, start_ts: datetime, end_ts: datetime, flt: Optional[str] = None) -> Usage: ...
+    def sum(self, start_ts: datetime, end_ts: datetime,
+            flt: Optional[str] = None,
+            reference_column: str = 'host') -> Generator[Usage, None, None]: ...
     
 class Limit(Protocol):
     def __init__(self, name: str, amount: int, period: int): ...
@@ -93,6 +103,7 @@ class Account(Protocol):
     def name(self) -> str: ...
     @property
     def hosts(self) -> Tuple[Host, ...]: ...
+    def host_by_name(self, host_name: str) -> Host: ...
     @property
     def limit(self) -> LimitSet: ...
     @property

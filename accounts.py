@@ -20,6 +20,11 @@ class Account(protocols.Account):
     def name(self) -> str: return self._name
     @property
     def hosts(self) -> Tuple[protocols.Host, ...]: return self._hosts
+    def host_by_name(self, host_name: str) -> protocols.Host:
+        for host in self._hosts:
+            if host.name == host_name:
+                return host
+        raise ValueError('Host with name %s is not in the list.' % repr(host_name))
     @property
     def limit(self) -> protocols.LimitSet: return self._limit
     @property
