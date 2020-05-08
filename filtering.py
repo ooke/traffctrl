@@ -1,3 +1,4 @@
+import os
 import protocols as p
 from marks import *
 from typing import *
@@ -12,7 +13,7 @@ class Filtering(object):
         self._accounts = accounts
         self._account_usage = account_usage
 
-    def filter(self, directory: str, cmd: Callable[[str], Any]) -> None:
+    def filter(self, directory: str, cmd: Callable[[str], Any] = os.system) -> None:
         cmd('''/sbin/iptables -t mangle -L FORWARD >%s/iptables.cache''' % directory)
         iptcache = '''cat %s/iptables.cache''' % directory
         cmd('''/sbin/iptables -t filter -L FORWARD >%s/iptablesf.cache''' % directory)

@@ -191,8 +191,8 @@ class HtmlReport(object):
         for limit_name in self._limit_names:
             print('<div class="smallblock"><h2>%s</h2>' % limit_name, file = self._output_stream)
             self._print_limit_block(limit_name)
-            print("</div>")
-        print("</div>")
+            print("</div>", file = self._output_stream)
+        print("</div>", file = self._output_stream)
 
     def hosts_usage(self) -> None:
         print('<div class="midblock"><h1>HOSTS</h1><table><tr><th>&nbsp;</th>',
@@ -324,7 +324,8 @@ function draw_chart(data, days, mult, offset) {
                                  xkey: 'date', postUnits: ' MiB', hideHover: true,
                                  ykeys: %s, labels: %s, pointSize: 0, resize: true});""" % \
               ([x.short for x in sorted(self._accounts, key = lambda x: x.short)],
-               [x.name for x in sorted(self._accounts, key = lambda x: x.short)]))
+               [x.name for x in sorted(self._accounts, key = lambda x: x.short)]),
+              file = self._output_stream)
         print("""
   } else {
     chart1.chart.setData(data.slice(start, end));
