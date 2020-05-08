@@ -224,7 +224,7 @@ class HtmlReport(object):
               file = self._output_stream)
         sum_usage: Dict[str, p.Usage] = {}
         sum_limits: Dict[str, p.Usage] = {}
-        for limit in sorted(self._limit_names):
+        for limit in self._limit_names:
             print('<th class="tright">%s</th>' % limit.replace(' ', '&nbsp;'),
                   end = ' ', file = self._output_stream)
             sum_usage[limit] = p.Usage(limit)
@@ -233,31 +233,34 @@ class HtmlReport(object):
             print('<tr><th class="tright user%s">%s</th>' \
                   % (account.short, account.name.replace(' ', '&nbsp;')),
                   end = ' ', file = self._output_stream)
-            for limit in sorted(self._limit_names):
+            for limit in self._limit_names:
                 if limit not in self._account_usage \
                    or account not in self._account_usage[limit]:
                     usage = p.Usage(account.short)
                 else: usage = self._account_usage[limit][account]
-                print('<td class="tright" title="%s / %s / %s">%s</td>' \
+                print('<td class="tright" title="%s / %s / %s / %s">%s</td>' \
                       % (bytes2units(usage.inp), bytes2units(usage.out),
                          bytes2units(usage.inp + usage.out),
-                         bytes2units(usage.dat)),
+                         bytes2units(usage.dat), account.limit(limit).amount_text),
                       end = ' ', file = self._output_stream)
                 if not account.ignore:
                     sum_usage[limit] += self._account_usage[limit][account]
                 sum_limits[limit] += p.Usage('tmp', dat = account.limit(limit).amount)
             print("</tr>", file = self._output_stream)
         print('<tr><th class="tright">SUM</th>', end = ' ', file = self._output_stream)
-        for _, usage in sorted(sum_limits.items(), key = lambda x: x[0]):
+        for limit in self._limit_names:
+            usage = sum_limits[limit]
             print('<th class="tright">%s</th>' % bytes2units(usage.dat),
                   end = ' ', file = self._output_stream)
         print('</tr><tr><th class="tright">ADDS</th>', end = ' ', file = self._output_stream)
-        for _, usage in sorted(sum_usage.items(), key = lambda x: x[0]):
+        for limit in self._limit_names:
+            usage = sum_usage[limit]
             print('<th class="tright">%s</th>' \
                   % bytes2units((usage.inp + usage.out) - usage.dat),
                   end = ' ', file = self._output_stream)
         print('</tr><tr><th class="tright">USED</th>', end = ' ', file = self._output_stream)
-        for _, usage in sorted(sum_usage.items(), key = lambda x: x[0]):
+        for limit in self._limit_names:
+            usage = sum_usage[limit]
             print('<th class="tright" title="%s / %s / %s">%s</th>' \
                   % (bytes2units(usage.inp), bytes2units(usage.out),
                      bytes2units(usage.inp + usage.out),
