@@ -98,6 +98,11 @@ class AccountsReport(object):
                     result[ref_ts] = {}
                 account = accounts_dict[ref_account]
                 result[ref_ts][account] = usage
+            dummy = p.Usage('dummy')
+            for res_ts, res_accounts in result.items():
+                for account in self._accounts:
+                    if account not in res_accounts:
+                        res_accounts[account] = dummy
         return result
 
 class HtmlReport(object):
@@ -173,7 +178,7 @@ class HtmlReport(object):
             red, yellow, weight = 0, 0, 'normal'
             if percent > 50.: red = yellow = min(int(percent / 100 * 150 + 50), 255)
             if percent > 80.: red = min(int(percent / 100 * 150 + 105), 255)
-            if percent > 99.9: red, yellow = min(((percent - 40) / 100) * 255, 255), 0
+            if percent > 99.99: red, yellow = min(int(((percent - 40) / 100) * 255), 255), 0
             if percent > 120.: weight = 'bold'
             print('<td class="tright" style="color: rgb(%d, %d, 0); font-weight: %s;">%s</td></tr>' \
                   % (red, yellow, weight, "%2.0f%%" % percent),
@@ -308,9 +313,11 @@ function draw_chart(data, days, mult, offset) {
   if (chart1.chart == null) {
     chart1.chart = Morris.Line({ element: 'chart1', data: data.slice(start, end),
                                  xkey: 'date', postUnits: ' MiB', hideHover: true,
-                                 ykeys: %s, labels: %s, pointSize: 0, resize: true});""" % \
+                                 ykeys: %s, labels: %s, lineColors: %s,
+                                 pointSize: 0, resize: true});""" % \
               ([x.short for x in sorted(self._accounts, key = lambda x: x.short)],
-               [x.name for x in sorted(self._accounts, key = lambda x: x.short)]),
+               [x.name for x in sorted(self._accounts, key = lambda x: x.short)],
+               [x.color for x in sorted(self._accounts, key = lambda x: x.short)]),
               file = self._output_stream)
         print("""
   } else {

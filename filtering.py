@@ -14,6 +14,7 @@ class Filtering(object):
         self._account_usage = account_usage
 
     def filter(self, directory: str, cmd: Callable[[str], Any] = os.system) -> None:
+        if not os.path.exists('/sbin/iptables'): return
         cmd('''/sbin/iptables -t mangle -L FORWARD >%s/iptables.cache''' % directory)
         iptcache = '''cat %s/iptables.cache''' % directory
         cmd('''/sbin/iptables -t filter -L FORWARD >%s/iptablesf.cache''' % directory)

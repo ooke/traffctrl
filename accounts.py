@@ -8,6 +8,7 @@ class Account(protocols.Account):
                  hosts: Tuple[protocols.Host, ...],
                  limit: protocols.LimitSet,
                  mark: Mark,
+                 color: str = '#000',
                  ignore: bool = False,
                  no_hardlimit: bool = False) -> None:
         self._short = short
@@ -15,6 +16,7 @@ class Account(protocols.Account):
         self._hosts = hosts
         self._limit = limit
         self._mark = mark
+        self._color = color
         self._ignore = ignore
         self._no_hardlimit = no_hardlimit
 
@@ -34,6 +36,8 @@ class Account(protocols.Account):
     def limit(self) -> protocols.LimitSet: return self._limit
     @property
     def mark(self) -> Mark: return self._mark
+    @property
+    def color(self) -> str: return self._color
     
     def amount(self, limit_name: str) -> int:
         return self._limit.limit(limit_name).amount
