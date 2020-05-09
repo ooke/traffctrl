@@ -277,8 +277,8 @@ class HtmlReport(object):
     def charts(self) -> None:
         print("""
 <div class="bigblock"><h1>DETAILS</h1>
-<span style="padding: 10px; margin: 10px;">daily:&nbsp;<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 92, 1);">92&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 62, 1);">62&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 32, 1);">32&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily, 16, 1);">16&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_daily,  8, 1);">8&nbsp;days</button>&nbsp;</span>
-<span style="padding: 10px; margin: 10px;">hourly:&nbsp;<button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 14, 24);">14&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 7, 24);">7&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 4, 24);">4&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(usage_hourly, 2, 24);">2&nbsp;days</button>&nbsp;</span>
+<span style="padding: 10px; margin: 10px;">daily:&nbsp;<button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 92, 1);">92&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 62, 1);">62&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 32, 1);">32&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 16, 1);">16&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1,  8, 1);">8&nbsp;days</button>&nbsp;</span>
+<span style="padding: 10px; margin: 10px;">hourly:&nbsp;<button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 14, 24);">14&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 7, 24);">7&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 4, 24);">4&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 2, 24);">2&nbsp;days</button>&nbsp;</span>
 <span style="padding: 10px; margin: 10px;">days:&nbsp;<input type="text" id="days" value="92" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;<span style="padding: 10px; margin: 10px;">offset:&nbsp;<input type="text" id="offset" value="0" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;</span>
 <div id="chart1" style="height: 400px;"></div>
 </div>""", file = self._output_stream)
@@ -300,9 +300,17 @@ class HtmlReport(object):
             print("},", file = self._output_stream)
         print("];", file = self._output_stream)
         print("""// setup chart1
-var chart1 = {chart: null, data: null, mult: 1};
+var chart1 = {chart: null, data: null, mult: 1, days: null, offset: null};
+if (typeof(localStorage) !== "undefined") {
+  chart1.data = localStorage.data;
+  chart1.offset = localStorage.offset;
+  chart1.mult = localStorage.mult;
+  chart1.days = localStorage.days;
+};
 function draw_chart(data, days, mult, offset) {
   if (data == null) data = chart1.data;
+  if (offset == null) offset = chart1.offset;
+  if (days == null) days = chart1.days;
   if (mult == null) mult = chart1.mult;
   if (days == null) days = Number(document.getElementById('days').value);
   if (offset == null) offset = Number(document.getElementById('offset').value);
@@ -310,8 +318,11 @@ function draw_chart(data, days, mult, offset) {
   var end = data.length-(offset*mult);
   if (start < 0) start = 0;
   if (end > data.length) end = data.length;
+  var rows = [];
+  if (data == 1) rows = usage_daily;
+  if (data == 2) rows = usage_hourly;
   if (chart1.chart == null) {
-    chart1.chart = Morris.Line({ element: 'chart1', data: data.slice(start, end),
+    chart1.chart = Morris.Line({ element: 'chart1', data: rows.slice(start, end),
                                  xkey: 'date', postUnits: ' MiB', hideHover: true,
                                  ykeys: %s, labels: %s, lineColors: %s,
                                  pointSize: 0, resize: true});""" % \
@@ -321,20 +332,28 @@ function draw_chart(data, days, mult, offset) {
               file = self._output_stream)
         print("""
   } else {
-    chart1.chart.setData(data.slice(start, end));
+    chart1.chart.setData(rows.slice(start, end));
   }
   chart1.data = data;
   chart1.mult = mult;
+  chart1.days = days;
+  chart1.offset = offset;
   document.getElementById('days').value = days;
   document.getElementById('offset').value = offset;
+  localStorage.data = data;
+  localStorage.mult = mult;
+  localStorage.days = days;
+  localStorage.offset = offset;
 }""", file = self._output_stream)
         print("""// display aware usage data cut
 var window_width = window.innerWidth * window.devicePixelRatio;
-if (window_width >= 3000) { draw_chart(usage_daily, 92, 1); }
-else if (window_width >= 1900) { draw_chart(usage_daily, 62, 1); }
-else if (window_width >= 1800) { draw_chart(usage_daily, 32, 1); }
-else if (window_width >= 750) { draw_chart(usage_daily, 16, 1); }
-else { draw_chart(usage_daily, 9, null); }
+if (chart1.days == null) {
+  if (window_width >= 3000) { draw_chart(1, 92, 1); }
+  else if (window_width >= 1900) { draw_chart(1, 62, 1); }
+  else if (window_width >= 1800) { draw_chart(1, 32, 1); }
+  else if (window_width >= 750) { draw_chart(1, 16, 1); }
+  else { draw_chart(1, 9, null); }
+} else { draw_chart(null, null, null, null); }
 """, file = self._output_stream)
         print("</script>", file = self._output_stream)
 

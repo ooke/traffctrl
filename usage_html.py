@@ -38,8 +38,8 @@ cc_limit = LimitSet(lnames).set('1 day',   8*GiB).set('3 days',  20*GiB).set('7 
 bm_limit = LimitSet(lnames).set('1 day',  80*MiB).set('3 days', 250*MiB).set('7 days', 500*MiB).set('14 days',  1*GiB).set('30 days',   2*GiB).set('90 days',   6*GiB)
 
 accounts = (
-    Account('aa', 'Afina', aa_devs, kk_limit, Mark.M512KBIT, '#006BA6'),
-    Account('bm', 'Mining', bm_devs, bm_limit, Mark.M128KBIT, '#483D3F'),
+    Account('aa', 'Afina', aa_devs, kk_limit, Mark.M512KBIT, '#000000'),
+    Account('bm', 'Mining', bm_devs, bm_limit, Mark.M128KBIT, '#006BA6'),
     Account('hd', 'Home', hd_devs, hd_limit, Mark.M64KBIT, '#FFBC42', no_hardlimit = True),
     Account('ie', 'Iris', ie_devs, kk_limit, Mark.M512KBIT, '#D81159'),
     Account('mm', 'Mama', mm_devs, mm_limit, Mark.M1MBIT, '#B2A4D4', no_hardlimit = True),
