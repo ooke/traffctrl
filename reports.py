@@ -114,6 +114,7 @@ class HtmlReport(object):
                  host_usage: Dict[str, Dict[p.Host, p.Usage]],
                  account_usage_daily: Dict[str, Dict[p.Account, p.Usage]],
                  account_usage_hourly: Dict[str, Dict[p.Account, p.Usage]],
+                 rest_adds: Optional[Dict[str, int]] = None,
                  footer: str = '',
                  output_stream: typing.TextIO = sys.stdout) -> None:
         self._router = router
@@ -123,6 +124,8 @@ class HtmlReport(object):
         self._host_usage = host_usage
         self._account_usage_daily = account_usage_daily
         self._account_usage_hourly = account_usage_hourly
+        if rest_adds is None: self._rest_adds = {}
+        else: self._rest_adds = rest_adds
         self._output_stream = output_stream
         self._footers: List[str] = [footer]
 
@@ -212,8 +215,9 @@ class HtmlReport(object):
         print("</tr>", file = self._output_stream)
         for account in sorted(self._accounts, key = lambda x: x.short):
             for host in sorted(account.hosts, key = lambda x: x.name):
-                print('<tr class="tright"><th class="tright user%s">%s</th>' \
-                      % (account.short, "%s/%s" % (host.name, account.short)),
+                print('<tr class="tright"><th class="tright user%s" title="rest %s">%s</th>' \
+                      % (account.short, bytes2units(self._rest_adds.get(host.name, 0)),
+                         "%s/%s" % (host.name, account.short)),
                       end = ' ', file = self._output_stream)
                 for limit_name in self._limit_names:
                     if limit_name not in self._host_usage \
@@ -282,7 +286,7 @@ class HtmlReport(object):
         print("""
 <div class="bigblock"><h1>DETAILS</h1>
 <span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">daily:&nbsp;</span><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 92, 1);">92&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 62, 1);">62&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 32, 1);">32&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 16, 1);">16&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1,  8, 1);">8&nbsp;days</button>&nbsp;</span>
-<span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">hourly:&nbsp;</span><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 14, 24);">14&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 7, 24);">7&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 4, 24);">4&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 2, 24);">2&nbsp;days</button>&nbsp;</span>
+<span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">hourly:&nbsp;</span><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 14, 24);">14&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 7, 24);">7&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 4, 24);">4&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 2, 24);">2&nbsp;days</button>&nbsp;</span>
 <span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">days:&nbsp;</span><input type="text" id="days" value="92" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;<span style="padding: 10px; margin: 10px;">offset:&nbsp;<input type="text" id="offset" value="0" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;</span>
 <div id="chart1" style="height: 400px;"></div>
 </div>""", file = self._output_stream)

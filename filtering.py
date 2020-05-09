@@ -13,7 +13,9 @@ class Filtering(object):
         self._accounts = accounts
         self._account_usage = account_usage
 
-    def filter(self, directory: str, cmd: Callable[[str], Any] = os.system) -> None:
+    def filter(self, directory: str,
+               rest_adds: Optional[Dict[str, int]] = None,
+               cmd: Callable[[str], Any] = os.system) -> None:
         if not os.path.exists('/sbin/iptables'): return
         cmd('''/sbin/iptables -t mangle -L FORWARD >%s/iptables.cache''' % directory)
         iptcache = '''cat %s/iptables.cache''' % directory
@@ -52,15 +54,15 @@ class Filtering(object):
                                           % (ipfcache, host.name, host.name))
                             hardlimited = True
                         break
-            if not limited:
-                for host in account.hosts:
+            for host in account.hosts:
+                if not limited or (rest_adds is not None and rest_adds.get(host.name, 0) > 0):
                     for mark in Mark:
                         cmd('''%s | grep -q -w '%s.kozachuk.info' && { set -x; /sbin/iptables -t mangle -D FORWARD -s %s.kozachuk.info -j MARK --set-mark %d >/dev/null 2>&1; }''' \
                                   % (iptcache, host.name, host.name, mark.value))
                         cmd('''%s | grep -q -w '%s.kozachuk.info' && { set -x; /sbin/iptables -t mangle -D FORWARD -d %s.kozachuk.info -j MARK --set-mark %d >/dev/null 2>&1; }''' \
                                   % (iptcache, host.name, host.name, mark.value))
-            if not hardlimited:
-                for host in account.hosts:
+            for host in account.hosts:
+                if not hardlimited or (rest_adds is not None and rest_adds.get(host.name, 0) > 0):
                     cmd('''%s | grep -q "REJECT.*%s.kozachuk.info.*anywhere" && { set -x; /sbin/iptables -t filter -D FORWARD -s %s.kozachuk.info/32 -j REJECT; }''' \
                               % (ipfcache, host.name, host.name))
                     cmd('''%s | grep -q "REJECT.*anywhere.*%s.kozachuk.info" && { set -x; /sbin/iptables -t filter -D FORWARD -d %s.kozachuk.info/32 -j REJECT; }''' \

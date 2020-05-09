@@ -77,13 +77,14 @@ class Additionals(protocols.Additionals):
     def _apply_data(self, store: protocols.Storage, ts: dt,
                     router: str, host: str, amount: int,
                     entries: List[Tuple[int, int]],
-                    collect_rows: Optional[List[protocols.DataRow]] = None) -> None:
+                    collect_rows: Optional[List[protocols.DataRow]] = None) -> int:
         data = {'add': amount, 'amount': 0}
         store.apply_mask(ts, lambda row: self._apply_data_entries(row, ts, data, entries, collect_rows),
                          flt = "host = '%s' AND router = '%s'" % (host, router))
+        return data['add']
 
     def apply_to_storage(self, store: protocols.Storage,
-                         collect_rows: Optional[Dict[protocols.AddsEntry, List[protocols.DataRow]]] = None) -> None:
+    collect_rows: Optional[Dict[protocols.AddsEntry, List[protocols.DataRow]]] = None) -> Dict[str, int]:
         boost_entries: List[int] = []
         for router, add_data in self._adds.items():
             for adds in add_data:
@@ -98,6 +99,7 @@ class Additionals(protocols.Additionals):
         store.update_entries('dat', zip(boost_entries, repeat(0)))
         del boost_entries
         data_entries: List[Tuple[int, int]] = []
+        rest_adds: Dict[str, int] = {}
         for router, add_data in self._adds.items():
             for adds in add_data:
                 add_ts, add_type, _, add_host, add_amount = adds
@@ -108,6 +110,10 @@ class Additionals(protocols.Additionals):
                     crows = None
                     if collect_rows is not None:
                         crows = collect_rows.setdefault(adds, [])
-                    self._apply_data(store, add_ts, router, add_host, add_amount, data_entries, crows)
-        store.update_entries('dat', data_entries)
+                    res = self._apply_data(store, add_ts, router, add_host, add_amount, data_entries, crows)
+                    if add_host not in rest_adds:
+                        rest_adds[add_host] = res
+                    else: rest_adds[add_host] += res
+                    store.update_entries('dat', data_entries)
         del data_entries
+        return rest_adds

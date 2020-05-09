@@ -69,7 +69,7 @@ storage.load_data(start_ts, days)
 
 print(pid, t(), 'load additionals from file %s' % repr(addsfile), flush = True)
 additionals = Additionals(addsfile)
-additionals.apply_to_storage(storage)
+rest_adds = additionals.apply_to_storage(storage)
 
 reports = AccountsReport(lnames, accounts, storage)
 print(pid, t(), 'calculate account usage', flush = True)
@@ -93,7 +93,7 @@ if child == 0:
     footer = '<div class="bigblock"><h1>TELIA</h1><img src="telia_state.png" alt="Telia state"></div>'
     with open(outfile + ".tmp", 'w') as fd:
         html_report = HtmlReport(router, lnames, accounts, account_usage, host_usage,
-                                 account_usage_daily, account_usage_hourly,
+                                 account_usage_daily, account_usage_hourly, rest_adds,
                                  footer, fd)
         html_report()
     os.rename(outfile + ".tmp", outfile)
@@ -106,7 +106,7 @@ if child == 0:
     mypid = os.getpid()
     print(pid, mypid, t(), 'configure firewall', flush = True)
     filtering = Filtering(lnames, accounts, account_usage)
-    filtering.filter(directory)
+    filtering.filter(directory, rest_adds)
     print(pid, mypid, t(), 'firewall configured.')
     sys.exit(0)
 
