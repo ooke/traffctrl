@@ -140,6 +140,7 @@ class HtmlReport(object):
   display: inline-block;
   padding: 5px;
   margin-right: 10px;
+  white-space: nowrap;
 }
 .bigblock {
   display: block;
@@ -150,9 +151,11 @@ class HtmlReport(object):
   display: inline-block;
   padding: 5px;
   margin-right: 10px;
+  white-space: nowrap;
 }
 .tright {
   text-align: right;
+  white-space: nowrap;
 }
 </style></head><body>""" % self._router, file = self._output_stream)
 
@@ -209,7 +212,7 @@ class HtmlReport(object):
         print("</tr>", file = self._output_stream)
         for account in sorted(self._accounts, key = lambda x: x.short):
             for host in sorted(account.hosts, key = lambda x: x.name):
-                print('<tr><th class="tright user%s">%s</th>' \
+                print('<tr class="tright"><th class="tright user%s">%s</th>' \
                       % (account.short, "%s/%s" % (host.name, account.short)),
                       end = ' ', file = self._output_stream)
                 for limit_name in self._limit_names:
@@ -220,7 +223,7 @@ class HtmlReport(object):
                     print('<td class="tright" title="%s / %s / %s">%s</td>' % \
                           (bytes2units(usage.inp), bytes2units(usage.out),
                            bytes2units(usage.inp + usage.out),
-                           bytes2units(usage.dat)),
+                           bytes2units(usage.dat, '&nbsp;')),
                           file = self._output_stream)
                 print("</tr>", file = self._output_stream)
         print("</table></div>", file = self._output_stream)
@@ -236,7 +239,7 @@ class HtmlReport(object):
             sum_usage[limit] = p.Usage(limit)
             sum_limits[limit] = p.Usage(limit)
         for account in sorted(self._accounts, key = lambda x: x.short):
-            print('<tr><th class="tright user%s">%s</th>' \
+            print('<tr class="tright"><th class="tright user%s">%s</th>' \
                   % (account.short, account.name.replace(' ', '&nbsp;')),
                   end = ' ', file = self._output_stream)
             for limit in self._limit_names:
@@ -247,39 +250,40 @@ class HtmlReport(object):
                 print('<td class="tright" title="%s / %s / %s / %s">%s</td>' \
                       % (bytes2units(usage.inp), bytes2units(usage.out),
                          bytes2units(usage.inp + usage.out),
-                         bytes2units(usage.dat), account.limit(limit).amount_text),
+                         bytes2units(usage.dat),
+                         account.limit(limit).amount_html),
                       end = ' ', file = self._output_stream)
                 if not account.ignore:
                     sum_usage[limit] += self._account_usage[limit][account]
                 sum_limits[limit] += p.Usage('tmp', dat = account.limit(limit).amount)
             print("</tr>", file = self._output_stream)
-        print('<tr><th class="tright">SUM</th>', end = ' ', file = self._output_stream)
+        print('<tr class="tright"><th class="tright">SUM</th>', end = ' ', file = self._output_stream)
         for limit in self._limit_names:
             usage = sum_limits[limit]
-            print('<th class="tright">%s</th>' % bytes2units(usage.dat),
+            print('<th class="tright">%s</th>' % bytes2units(usage.dat, '&nbsp;'),
                   end = ' ', file = self._output_stream)
-        print('</tr><tr><th class="tright">ADDS</th>', end = ' ', file = self._output_stream)
+        print('</tr><tr class="tright"><th class="tright">ADDS</th>', end = ' ', file = self._output_stream)
         for limit in self._limit_names:
             usage = sum_usage[limit]
             print('<th class="tright">%s</th>' \
-                  % bytes2units((usage.inp + usage.out) - usage.dat),
+                  % bytes2units((usage.inp + usage.out) - usage.dat, '&nbsp;'),
                   end = ' ', file = self._output_stream)
-        print('</tr><tr><th class="tright">USED</th>', end = ' ', file = self._output_stream)
+        print('</tr><tr class="tright"><th class="tright">USED</th>', end = ' ', file = self._output_stream)
         for limit in self._limit_names:
             usage = sum_usage[limit]
             print('<th class="tright" title="%s / %s / %s">%s</th>' \
                   % (bytes2units(usage.inp), bytes2units(usage.out),
                      bytes2units(usage.inp + usage.out),
-                     bytes2units(usage.dat)),
+                     bytes2units(usage.dat, '&nbsp;')),
                   end = ' ', file = self._output_stream)
         print("</tr></table></div>", end = ' ', file = self._output_stream)
 
     def charts(self) -> None:
         print("""
 <div class="bigblock"><h1>DETAILS</h1>
-<span style="padding: 10px; margin: 10px;">daily:&nbsp;<button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 92, 1);">92&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 62, 1);">62&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 32, 1);">32&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 16, 1);">16&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1,  8, 1);">8&nbsp;days</button>&nbsp;</span>
-<span style="padding: 10px; margin: 10px;">hourly:&nbsp;<button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 14, 24);">14&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 7, 24);">7&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 4, 24);">4&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 2, 24);">2&nbsp;days</button>&nbsp;</span>
-<span style="padding: 10px; margin: 10px;">days:&nbsp;<input type="text" id="days" value="92" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;<span style="padding: 10px; margin: 10px;">offset:&nbsp;<input type="text" id="offset" value="0" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;</span>
+<span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">daily:&nbsp;</span><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 92, 1);">92&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 62, 1);">62&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 32, 1);">32&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 16, 1);">16&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1,  8, 1);">8&nbsp;days</button>&nbsp;</span>
+<span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">hourly:&nbsp;</span><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 14, 24);">14&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 7, 24);">7&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 4, 24);">4&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 2, 24);">2&nbsp;days</button>&nbsp;</span>
+<span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">days:&nbsp;</span><input type="text" id="days" value="92" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;<span style="padding: 10px; margin: 10px;">offset:&nbsp;<input type="text" id="offset" value="0" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;</span>
 <div id="chart1" style="height: 400px;"></div>
 </div>""", file = self._output_stream)
         print("<script>", file = self._output_stream)
@@ -300,27 +304,25 @@ class HtmlReport(object):
             print("},", file = self._output_stream)
         print("];", file = self._output_stream)
         print("""// setup chart1
-var chart1 = {chart: null, data: null, mult: 1, days: null, offset: null};
+var chart1 = {chart: null, data: null, mult: 1};
 if (typeof(localStorage) !== "undefined") {
   chart1.data = localStorage.data;
-  chart1.offset = localStorage.offset;
   chart1.mult = localStorage.mult;
-  chart1.days = localStorage.days;
+  document.getElementById('days').value = localStorage.days;
+  document.getElementById('offset').value = localStorage.offset;
 };
 function draw_chart(data, days, mult, offset) {
   if (data == null) data = chart1.data;
-  if (offset == null) offset = chart1.offset;
-  if (days == null) days = chart1.days;
   if (mult == null) mult = chart1.mult;
   if (days == null) days = Number(document.getElementById('days').value);
   if (offset == null) offset = Number(document.getElementById('offset').value);
   var rows = [];
   if (data == 1) rows = usage_daily;
   if (data == 2) rows = usage_hourly;
-  var start = data.length-(days*mult)-(offset*mult);
-  var end = data.length-(offset*mult);
+  var start = rows.length-(days*mult)-(offset*mult);
+  var end = rows.length-(offset*mult);
   if (start < 0) start = 0;
-  if (end > data.length) end = data.length;
+  if (end > rows.length) end = rows.length;
   if (chart1.chart == null) {
     chart1.chart = Morris.Line({ element: 'chart1', data: rows.slice(start, end),
                                  xkey: 'date', postUnits: ' MiB', hideHover: true,
@@ -336,8 +338,6 @@ function draw_chart(data, days, mult, offset) {
   }
   chart1.data = data;
   chart1.mult = mult;
-  chart1.days = days;
-  chart1.offset = offset;
   document.getElementById('days').value = days;
   document.getElementById('offset').value = offset;
   localStorage.data = data;
@@ -347,7 +347,7 @@ function draw_chart(data, days, mult, offset) {
 }""", file = self._output_stream)
         print("""// display aware usage data cut
 var window_width = window.innerWidth * window.devicePixelRatio;
-if (chart1.days == null) {
+if (chart1.data == null) {
   if (window_width >= 3000) { draw_chart(1, 92, 1); }
   else if (window_width >= 1900) { draw_chart(1, 62, 1); }
   else if (window_width >= 1800) { draw_chart(1, 32, 1); }

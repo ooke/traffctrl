@@ -14,6 +14,9 @@ from datetime import datetime as dt, timedelta as td
 from typing import *
 from utils import *
 
+timing = time.monotonic()
+def t() -> str: return "%ds" % int(time.monotonic() - timing)
+
 if len(sys.argv) != 6:
     sys.stderr.write('Usage: %s <start_ts> <days> <router> <directory> <output>\n' % sys.argv[0])
     sys.exit(1)
@@ -60,41 +63,51 @@ outfile = sys.argv[5]
 addsfile = os.path.join(directory, 'additional_contingent.dat')
 pid = os.getpid()
 
-print(pid, 'load data from directory %s' % repr(directory), flush = True)
+print(pid, t(), 'load data from directory %s' % repr(directory), flush = True)
 storage = Storage(accounts, directory)
 storage.load_data(start_ts, days)
 
-print(pid, 'load additionals from file %s' % repr(addsfile), flush = True)
+print(pid, t(), 'load additionals from file %s' % repr(addsfile), flush = True)
 additionals = Additionals(addsfile)
 additionals.apply_to_storage(storage)
 
-print(pid, 'calculate account usage', flush = True)
 reports = AccountsReport(lnames, accounts, storage)
+print(pid, t(), 'calculate account usage', flush = True)
 account_usage: Dict[str, Dict[p.Account, p.Usage]] = {}
 for limit_name in lnames:
     account_usage[limit_name] = reports.account_usage(start_ts, router, limit_name)
 
-print(pid, 'calculate host usage', flush = True)
-host_usage: Dict[str, Dict[p.Host, p.Usage]] = {}
-for limit_name in lnames:
-    host_usage[limit_name] = reports.host_usage(start_ts, router, limit_name)
+child = os.fork()
+if child == 0:
+    mypid = os.getpid()
+    print(pid, mypid, t(), 'calculate host usage', flush = True)
+    host_usage: Dict[str, Dict[p.Host, p.Usage]] = {}
+    for limit_name in lnames:
+        host_usage[limit_name] = reports.host_usage(start_ts, router, limit_name)
+    print(pid, mypid, t(), 'calculate daily report', flush = True)
+    account_usage_daily = reports.account_usage_periodic(start_ts, router, days, period = 'day')
+    print(pid, mypid, 'calculate hourly report', flush = True)
+    account_usage_hourly = reports.account_usage_periodic(start_ts, router, 31, period = 'hour')
 
-print(pid, 'calculate daily report', flush = True)
-account_usage_daily = reports.account_usage_periodic(start_ts, router, days, period = 'day')
-print(pid, 'calculate hourly report', flush = True)
-account_usage_hourly = reports.account_usage_periodic(start_ts, router, 31, period = 'hour')
+    print(pid, mypid, t(), 'generate html file to %s' % repr(outfile), flush = True)
+    footer = '<div class="bigblock"><h1>TELIA</h1><img src="telia_state.png" alt="Telia state"></div>'
+    with open(outfile + ".tmp", 'w') as fd:
+        html_report = HtmlReport(router, lnames, accounts, account_usage, host_usage,
+                                 account_usage_daily, account_usage_hourly,
+                                 footer, fd)
+        html_report()
+    os.rename(outfile + ".tmp", outfile)
 
-print(pid, 'generate html file to %s' % repr(outfile), flush = True)
-footer = '<div class="bigblock"><h1>TELIA</h1><img src="telia_state.png" alt="Telia state"></div>'
-with open(outfile + ".tmp", 'w') as fd:
-    html_report = HtmlReport(router, lnames, accounts, account_usage, host_usage,
-                             account_usage_daily, account_usage_hourly,
-                             footer, fd)
-    html_report()
-os.rename(outfile + ".tmp", outfile)
+    print(pid, mypid, t(), 'file generated.')
+    sys.exit(0)
 
-print(pid, 'configure firewall', flush = True)
-filtering = Filtering(lnames, accounts, account_usage)
-filtering.filter(directory)
+child = os.fork()
+if child == 0:
+    mypid = os.getpid()
+    print(pid, mypid, t(), 'configure firewall', flush = True)
+    filtering = Filtering(lnames, accounts, account_usage)
+    filtering.filter(directory)
+    print(pid, mypid, t(), 'firewall configured.')
+    sys.exit(0)
 
-print(pid, 'everything is done', flush = True)
+print(pid, t(), 'finish main process', flush = True)
