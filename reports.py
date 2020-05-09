@@ -314,13 +314,13 @@ function draw_chart(data, days, mult, offset) {
   if (mult == null) mult = chart1.mult;
   if (days == null) days = Number(document.getElementById('days').value);
   if (offset == null) offset = Number(document.getElementById('offset').value);
+  var rows = [];
+  if (data == 1) rows = usage_daily;
+  if (data == 2) rows = usage_hourly;
   var start = data.length-(days*mult)-(offset*mult);
   var end = data.length-(offset*mult);
   if (start < 0) start = 0;
   if (end > data.length) end = data.length;
-  var rows = [];
-  if (data == 1) rows = usage_daily;
-  if (data == 2) rows = usage_hourly;
   if (chart1.chart == null) {
     chart1.chart = Morris.Line({ element: 'chart1', data: rows.slice(start, end),
                                  xkey: 'date', postUnits: ' MiB', hideHover: true,
