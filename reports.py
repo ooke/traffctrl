@@ -287,8 +287,8 @@ class HtmlReport(object):
 <div class="bigblock"><h1>DETAILS</h1>
 <span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">daily:&nbsp;</span><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 92, 1);">92&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 62, 1);">62&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 32, 1);">32&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1, 16, 1);">16&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(1,  8, 1);">8&nbsp;days</button>&nbsp;</span>
 <span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">hourly:&nbsp;</span><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 14, 24);">14&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 7, 24);">7&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 4, 24);">4&nbsp;days</button><button style="background: #ddd; padding: 5px;" onclick="draw_chart(2, 2, 24);">2&nbsp;days</button>&nbsp;</span>
-<span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">days:&nbsp;</span><input type="text" id="days" value="92" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;<span style="padding: 10px; margin: 10px;">offset:&nbsp;<input type="text" id="offset" value="0" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;</span>
-<div id="chart1" style="height: 400px;"></div>
+<span style="padding: 10px; margin: 10px; white-space: nowrap;"><span style="width: 10em;">days:&nbsp;</span><input type="text" id="days" value="92" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;<span style="padding: 10px; margin: 10px; white-space: nowrap;">offset:&nbsp;<input type="text" id="offset" value="0" size="3" onChange="draw_chart(null, null, null);"></input>&nbsp;<span style="padding: 10px; margin: 10px; white-space: nowrap;">real:&nbsp;<input type="checkbox" id="ykeys" value="real" onChange="draw_chart(null, null, null);"></input>
+<div id="chart1" style="height: 600px;"></div>
 </div>""", file = self._output_stream)
         print("<script>", file = self._output_stream)
         print("var usage_daily = [", file = self._output_stream)
@@ -297,6 +297,8 @@ class HtmlReport(object):
             for account, usage in sorted(day_usage.items(), key = lambda x: x[0].short):
                 print(""""%s":%d,""" % (account.short, usage.dat / MiB),
                       end = ' ', file = self._output_stream)
+                print(""""%s_r":%d,""" % (account.short, (usage.inp + usage.out) / MiB),
+                      end = ' ', file = self._output_stream)
             print("},", file = self._output_stream)
         print("];", file = self._output_stream)
         print("var usage_hourly = [", file = self._output_stream)
@@ -304,6 +306,8 @@ class HtmlReport(object):
             print("""{"date":"%s",""" % hour_str, end = ' ', file = self._output_stream)
             for account, usage in sorted(hour_usage.items(), key = lambda x: x[0].short):
                 print(""""%s":%d,""" % (account.short, usage.dat / MiB),
+                      end = ' ', file = self._output_stream)
+                print(""""%s_r":%d,""" % (account.short, (usage.inp + usage.out) / MiB),
                       end = ' ', file = self._output_stream)
             print("},", file = self._output_stream)
         print("];", file = self._output_stream)
@@ -314,6 +318,7 @@ if (typeof(localStorage) !== "undefined") {
   chart1.mult = localStorage.mult;
   document.getElementById('days').value = localStorage.days;
   document.getElementById('offset').value = localStorage.offset;
+  document.getElementById('offset').checked = localStorage.ykeys;
 };
 function draw_chart(data, days, mult, offset) {
   if (data == null) data = chart1.data;
@@ -325,19 +330,23 @@ function draw_chart(data, days, mult, offset) {
   if (data == 2) rows = usage_hourly;
   var start = rows.length-(days*mult)-(offset*mult);
   var end = rows.length-(offset*mult);
+  var ykeys = %s;
+  if (document.getElementById('ykeys').checked) ykeys = %s;
   if (start < 0) start = 0;
   if (end > rows.length) end = rows.length;
   if (chart1.chart == null) {
     chart1.chart = Morris.Line({ element: 'chart1', data: rows.slice(start, end),
                                  xkey: 'date', postUnits: ' MiB', hideHover: true,
-                                 ykeys: %s, labels: %s, lineColors: %s,
+                                 ykeys: ykeys, labels: %s, lineColors: %s,
                                  pointSize: 0, resize: true});""" % \
               ([x.short for x in sorted(self._accounts, key = lambda x: x.short)],
+               ["%s_r" % x.short for x in sorted(self._accounts, key = lambda x: x.short)],
                [x.name for x in sorted(self._accounts, key = lambda x: x.short)],
                [x.color for x in sorted(self._accounts, key = lambda x: x.short)]),
               file = self._output_stream)
         print("""
   } else {
+    chart1.chart.options.ykeys = ykeys;
     chart1.chart.setData(rows.slice(start, end));
   }
   chart1.data = data;
@@ -348,6 +357,7 @@ function draw_chart(data, days, mult, offset) {
   localStorage.mult = mult;
   localStorage.days = days;
   localStorage.offset = offset;
+  localStorage.ykeys = document.getElementById('ykeys').checked;
 }""", file = self._output_stream)
         print("""// display aware usage data cut
 var window_width = window.innerWidth * window.devicePixelRatio;

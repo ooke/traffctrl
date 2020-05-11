@@ -36,7 +36,7 @@ lnames = ('1 day', '3 days', '7 days', '14 days', '30 days', '90 days')
 ok_limit = LimitSet(lnames).set('1 day',  15*GiB).set('3 days',  25*GiB).set('7 days',  50*GiB).set('14 days', 60*GiB).set('30 days', 120*GiB).set('90 days', 360*GiB)
 mm_limit = LimitSet(lnames).set('1 day',  10*GiB).set('3 days',  25*GiB).set('7 days',  50*GiB).set('14 days', 60*GiB).set('30 days', 120*GiB).set('90 days', 360*GiB)
 kk_limit = LimitSet(lnames).set('1 day',   4*GiB).set('3 days',  12*GiB).set('7 days',  18*GiB).set('14 days', 35*GiB).set('30 days',  55*GiB).set('90 days', 150*GiB)
-hd_limit = LimitSet(lnames).set('1 day', 600*MiB).set('3 days',   1*GiB).set('7 days',   2*GiB).set('14 days',  4*GiB).set('30 days',   8*GiB).set('90 days',  24*GiB)
+hd_limit = LimitSet(lnames).set('1 day', 600*MiB).set('3 days',   2*GiB).set('7 days',   4*GiB).set('14 days',  7*GiB).set('30 days',  10*GiB).set('90 days',  26*GiB)
 cc_limit = LimitSet(lnames).set('1 day',   8*GiB).set('3 days',  20*GiB).set('7 days',  30*GiB).set('14 days', 50*GiB).set('30 days',  70*GiB).set('90 days', 100*GiB)
 bm_limit = LimitSet(lnames).set('1 day',  80*MiB).set('3 days', 250*MiB).set('7 days', 500*MiB).set('14 days',  1*GiB).set('30 days',   2*GiB).set('90 days',   6*GiB)
 
