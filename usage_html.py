@@ -17,8 +17,8 @@ from utils import *
 timing = time.monotonic()
 def t() -> str: return "%ds" % int(time.monotonic() - timing)
 
-if len(sys.argv) != 6:
-    sys.stderr.write('Usage: %s <start_ts> <days> <router> <directory> <output>\n' % sys.argv[0])
+if len(sys.argv) != 7:
+    sys.stderr.write('Usage: %s <start_ts> <days> <router> <directory> <output> <firewall>\n' % sys.argv[0])
     sys.exit(1)
 
 sv_devs = (Host('ltn'),Host('bc'),Host('pi'),Host('klima'),Host('wolfram'),Host('erbium'),Host('downloads'),Host('chat'),Host('xenon'),Host('tantal'),Host('thorium'),Host('lithium'),Host('bohrium'),Host('barium'),Host('priv'),Host('nihonium'),Host('nswitch'),Host('idrac1'),Host('hpprinter'))
@@ -60,6 +60,7 @@ days = int(sys.argv[2])
 router = sys.argv[3]
 directory = sys.argv[4]
 outfile = sys.argv[5]
+firewall = (sys.argv[6].strip().lower() == 'on')
 addsfile = os.path.join(directory, 'additional_contingent.dat')
 pid = os.getpid()
 
@@ -90,24 +91,26 @@ if child == 0:
     account_usage_hourly = reports.account_usage_periodic(start_ts, router, 31, period = 'hour')
 
     print(pid, mypid, t(), 'generate html file to %s' % repr(outfile), flush = True)
+    header = '<a href="usage.html">nihonium</a> <a href="barium.html">barium</a> <a href="mikrotik.html">mikrotik</a> <a href="priv.html">priv</a> <br/>'
     footer = '<div class="bigblock"><h1>TELIA</h1><img src="telia_state.png" alt="Telia state"></div>'
     with open(outfile + ".tmp", 'w') as fd:
         html_report = HtmlReport(router, lnames, accounts, account_usage, host_usage,
                                  account_usage_daily, account_usage_hourly, rest_adds,
-                                 footer, fd)
+                                 header, footer, fd)
         html_report()
     os.rename(outfile + ".tmp", outfile)
 
     print(pid, mypid, t(), 'file generated.')
     sys.exit(0)
 
-child = os.fork()
-if child == 0:
-    mypid = os.getpid()
-    print(pid, mypid, t(), 'configure firewall', flush = True)
-    filtering = Filtering(lnames, accounts, account_usage)
-    filtering.filter(directory, rest_adds)
-    print(pid, mypid, t(), 'firewall configured.')
-    sys.exit(0)
+if firewall:
+    child = os.fork()
+    if child == 0:
+        mypid = os.getpid()
+        print(pid, mypid, t(), 'configure firewall', flush = True)
+        filtering = Filtering(lnames, accounts, account_usage)
+        filtering.filter(directory, rest_adds)
+        print(pid, mypid, t(), 'firewall configured.')
+        sys.exit(0)
 
 print(pid, t(), 'finish main process', flush = True)

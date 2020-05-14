@@ -115,6 +115,7 @@ class HtmlReport(object):
                  account_usage_daily: Dict[str, Dict[p.Account, p.Usage]],
                  account_usage_hourly: Dict[str, Dict[p.Account, p.Usage]],
                  rest_adds: Optional[Dict[str, int]] = None,
+                 header: str = '',
                  footer: str = '',
                  output_stream: typing.TextIO = sys.stdout) -> None:
         self._router = router
@@ -127,6 +128,7 @@ class HtmlReport(object):
         if rest_adds is None: self._rest_adds = {}
         else: self._rest_adds = rest_adds
         self._output_stream = output_stream
+        self._headers: List[str] = [header]
         self._footers: List[str] = [footer]
 
     def header(self) -> None:
@@ -161,6 +163,8 @@ class HtmlReport(object):
   white-space: nowrap;
 }
 </style></head><body>""" % self._router, file = self._output_stream)
+        for line in self._headers:
+            print(line, file = self._output_stream)
 
     def footer(self) -> None:
         for line in self._footers:
@@ -258,7 +262,7 @@ class HtmlReport(object):
                          account.limit(limit).amount_html),
                       end = ' ', file = self._output_stream)
                 if not account.ignore:
-                    sum_usage[limit] += self._account_usage[limit][account]
+                    sum_usage[limit] += usage
                 sum_limits[limit] += p.Usage('tmp', dat = account.limit(limit).amount)
             print("</tr>", file = self._output_stream)
         print('<tr class="tright"><th class="tright">SUM</th>', end = ' ', file = self._output_stream)
