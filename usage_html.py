@@ -64,16 +64,16 @@ firewall = (sys.argv[6].strip().lower() == 'on')
 addsfile = os.path.join(directory, 'additional_contingent.dat')
 pid = os.getpid()
 
-print(pid, t(), 'load data from directory %s' % repr(directory), flush = True)
+print(pid, t(), router, 'load data from directory %s' % repr(directory), flush = True)
 storage = Storage(accounts, directory)
 storage.load_data(start_ts, days)
 
-print(pid, t(), 'load additionals from file %s' % repr(addsfile), flush = True)
+print(pid, t(), router, 'load additionals from file %s' % repr(addsfile), flush = True)
 additionals = Additionals(addsfile)
 rest_adds = additionals.apply_to_storage(storage)
 
 reports = AccountsReport(lnames, accounts, storage)
-print(pid, t(), 'calculate account usage', flush = True)
+print(pid, t(), router, 'calculate account usage', flush = True)
 account_usage: Dict[str, Dict[p.Account, p.Usage]] = {}
 for limit_name in lnames:
     account_usage[limit_name] = reports.account_usage(start_ts, router, limit_name)
@@ -81,16 +81,16 @@ for limit_name in lnames:
 child = os.fork()
 if child == 0:
     mypid = os.getpid()
-    print(pid, mypid, t(), 'calculate host usage', flush = True)
+    print(pid, mypid, t(), router, 'calculate host usage', flush = True)
     host_usage: Dict[str, Dict[p.Host, p.Usage]] = {}
     for limit_name in lnames:
         host_usage[limit_name] = reports.host_usage(start_ts, router, limit_name)
-    print(pid, mypid, t(), 'calculate daily report', flush = True)
+    print(pid, mypid, t(), router, 'calculate daily report', flush = True)
     account_usage_daily = reports.account_usage_periodic(start_ts, router, days, period = 'day')
-    print(pid, mypid, 'calculate hourly report', flush = True)
+    print(pid, mypid, t(), router, 'calculate hourly report', flush = True)
     account_usage_hourly = reports.account_usage_periodic(start_ts, router, 31, period = 'hour')
 
-    print(pid, mypid, t(), 'generate html file to %s' % repr(outfile), flush = True)
+    print(pid, mypid, t(), router, 'generate html file to %s' % repr(outfile), flush = True)
     header = '<a href="usage.html">nihonium</a> <a href="barium.html">barium</a> <a href="mikrotik.html">mikrotik</a> <a href="priv.html">priv</a> <br/>'
     footer = '<div class="bigblock"><h1>TELIA</h1><img src="telia_state.png" alt="Telia state"></div>'
     with open(outfile + ".tmp", 'w') as fd:
@@ -100,17 +100,17 @@ if child == 0:
         html_report()
     os.rename(outfile + ".tmp", outfile)
 
-    print(pid, mypid, t(), 'file generated.')
+    print(pid, mypid, t(), router, 'file generated.')
     sys.exit(0)
 
 if firewall:
     child = os.fork()
     if child == 0:
         mypid = os.getpid()
-        print(pid, mypid, t(), 'configure firewall', flush = True)
+        print(pid, mypid, t(), router, 'configure firewall', flush = True)
         filtering = Filtering(lnames, accounts, account_usage)
         filtering.filter(directory, rest_adds)
-        print(pid, mypid, t(), 'firewall configured.')
+        print(pid, mypid, t(), router, 'firewall configured.')
         sys.exit(0)
 
-print(pid, t(), 'finish main process', flush = True)
+print(pid, t(), router, 'finish main process', flush = True)
