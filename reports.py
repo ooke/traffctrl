@@ -180,18 +180,20 @@ class HtmlReport(object):
             else: usage = self._account_usage[limit][account]
             print('<tr><th class="tright user%s">%s</th><td class="tright" title="%s / %s / %s">%s</td>' \
                   % (account.short, account.name.replace(' ', '&nbsp;'),
-                     bytes2units(usage.inp), bytes2units(usage.out),
-                     bytes2units(usage.inp + usage.out),
-                     bytes2units(usage.dat)),
+                     bytes2units(usage.inp), bytes2units(usage.out), bytes2units(usage.dat),
+                     bytes2units(usage.inp + usage.out, '&nbsp')),
                   file = self._output_stream)
             percent = usage.dat / account.limit(limit).amount * 100
+            if percent > 99. and usage.dat < account.limit(limit).amount:
+                percent = 99.
+            percent_real = (usage.inp + usage.out) / account.limit(limit).amount * 100
             red, yellow, weight = 0, 0, 'normal'
             if percent > 50.: red = yellow = min(int(percent / 100 * 150 + 50), 255)
             if percent > 80.: red = min(int(percent / 100 * 150 + 105), 255)
-            if percent > 99.99: red, yellow = min(int(((percent - 40) / 100) * 255), 255), 0
+            if percent > 99.: red, yellow = min(int(((percent - 40) / 100) * 255), 255), 0
             if percent > 120.: weight = 'bold'
-            print('<td class="tright" style="color: rgb(%d, %d, 0); font-weight: %s;">%s</td></tr>' \
-                  % (red, yellow, weight, "%2.0f%%" % percent),
+            print('<td class="tright" style="color: rgb(%d, %d, 0); font-weight: %s;" title="%s">%s</td></tr>' \
+                  % (red, yellow, weight, "%2.0f%%" % percent_real, "%2.0f%%" % percent),
                   file = self._output_stream)
             if not account.ignore:
                 dat_sum += usage.dat
@@ -229,9 +231,8 @@ class HtmlReport(object):
                         usage = p.Usage(account.short)
                     else: usage = self._host_usage[limit_name][host]
                     print('<td class="tright" title="%s / %s / %s">%s</td>' % \
-                          (bytes2units(usage.inp), bytes2units(usage.out),
-                           bytes2units(usage.inp + usage.out),
-                           bytes2units(usage.dat, '&nbsp;')),
+                          (bytes2units(usage.inp), bytes2units(usage.out), bytes2units(usage.dat),
+                           bytes2units(usage.inp + usage.out, '&nbsp;')),
                           file = self._output_stream)
                 print("</tr>", file = self._output_stream)
         print("</table></div>", file = self._output_stream)
@@ -256,9 +257,8 @@ class HtmlReport(object):
                     usage = p.Usage(account.short)
                 else: usage = self._account_usage[limit][account]
                 print('<td class="tright" title="%s / %s / %s / %s">%s</td>' \
-                      % (bytes2units(usage.inp), bytes2units(usage.out),
-                         bytes2units(usage.inp + usage.out),
-                         bytes2units(usage.dat),
+                      % (bytes2units(usage.inp), bytes2units(usage.out), bytes2units(usage.dat),
+                         bytes2units(usage.inp + usage.out, '&nbsp;'),
                          account.limit(limit).amount_html),
                       end = ' ', file = self._output_stream)
                 if not account.ignore:
