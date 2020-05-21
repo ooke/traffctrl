@@ -123,6 +123,7 @@ class AddsEntry(NamedTuple):
     router: str
     host: Optional[str]
     amount: Union[timedelta, int]
+    comment: Optional[str] = None
 
 class Additionals(object):
     def __init__(self, adds_path: str) -> None: ...

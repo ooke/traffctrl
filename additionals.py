@@ -12,23 +12,26 @@ class Additionals(protocols.Additionals):
         with open(adds_path) as fd:
             for line in fd:
                 line = line.strip()
-                ma_boost = re.match(r'^([0-9]+)-([0-9]+)-([0-9]+)\s+([0-9]+):([0-9]+)\s+boost\s+([a-z0-9]+)\s+([0-9]+)\s*h.*$', line)
-                ma_cont = re.match(r'^([0-9]+)-([0-9]+)-([0-9]+)\s+([0-9]+):([0-9]+)\s+data\s+([a-z0-9]+)\s+([a-z0-9]+)\s+([0-9.]+)\s*([kmgtKMGT])i[bB].*$', line)
+                ma_boost = re.match(r'^([0-9]+)-([0-9]+)-([0-9]+)\s+([0-9]+):([0-9]+)\s+boost\s+([a-z0-9]+)\s+([0-9]+)\s*h(.*)$', line)
+                ma_cont = re.match(r'^([0-9]+)-([0-9]+)-([0-9]+)\s+([0-9]+):([0-9]+)\s+data\s+([a-z0-9]+)\s+([a-z0-9]+)\s+([0-9.]+)\s*([kmgtKMGT])i[bB](.*)$', line)
                 if ma_boost: ma_gen = ma_boost
                 elif ma_cont: ma_gen = ma_cont
                 else: continue
                 year, month, day = int(ma_gen.group(1)), int(ma_gen.group(2)), int(ma_gen.group(3))
                 hour, minute, router = int(ma_gen.group(4)), int(ma_gen.group(5)), ma_gen.group(6)
+                comment: Optional[str]
                 if ma_boost:
                     numhours = int(ma_boost.group(7))
                     if router not in self._adds: self._adds[router] = []
-                    self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'boost', router, None, td(hours = numhours)))
+                    comment = (x if len(x := ma_gen.group(8).strip()) > 0 else None)
+                    self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'boost', router, None, td(hours = numhours), comment))
                     continue
                 if ma_cont:
                     host = ma_cont.group(7)
                     amount = units2bytes(float(ma_cont.group(8)), Units[ma_cont.group(9).upper()])
                     if router not in self._adds: self._adds[router] = []
-                    self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'data', router, host, int(amount)))
+                    comment = (x if len(x := ma_gen.group(10).strip()) > 0 else None)
+                    self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'data', router, host, int(amount), comment))
                     continue
 
     @property
@@ -88,7 +91,7 @@ class Additionals(protocols.Additionals):
         boost_entries: List[int] = []
         for router, add_data in self._adds.items():
             for adds in add_data:
-                add_ts, add_type, _, _, add_duration = adds
+                add_ts, add_type, _, _, add_duration, _ = adds
                 if add_type == 'boost':
                     if not isinstance(add_duration, td):
                         raise RuntimeError('No timedelta defined')
@@ -102,7 +105,7 @@ class Additionals(protocols.Additionals):
         rest_adds: Dict[str, int] = {}
         for router, add_data in self._adds.items():
             for adds in add_data:
-                add_ts, add_type, _, add_host, add_amount = adds
+                add_ts, add_type, _, add_host, add_amount, _ = adds
                 if add_type == 'data':
                     if add_host is None: raise RuntimeError('No host defined')
                     if not isinstance(add_amount, int):
