@@ -34,35 +34,37 @@ class Filtering(object):
                     percent = int(usage.dat / account.limit(limit).amount * 100)
                     if percent >= 100:
                         for host in account.hosts:
-                            mark = account.mark
-                            for curmark in Mark:
-                                if mark == curmark: continue
-                                cmd('''%s | grep -q -w '%s.kozachuk.info.*MARK set %s' && { set -x; /sbin/iptables -t mangle -D FORWARD -s %s.kozachuk.info -j MARK --set-mark %d; }''' \
-                                          % (iptcache, host.name, hex(curmark.value), host.name, curmark.value))
-                                cmd('''%s | grep -q -w '%s.kozachuk.info.*MARK set %s' && { set -x; /sbin/iptables -t mangle -D FORWARD -d %s.kozachuk.info -j MARK --set-mark %d; }''' \
-                                          % (iptcache, host.name, hex(curmark.value), host.name, curmark.value))
-                            cmd('''%s | grep -q '\\<%s.kozachuk.info\\>.*anywhere' || { set -x; /sbin/iptables -t mangle -I FORWARD -s %s.kozachuk.info -j MARK --set-mark %d; }''' \
-                                      % (iptcache, host.name, host.name, mark.value))
-                            cmd('''%s | grep -q 'anywhere.*\\<%s.kozachuk.info\\>' || { set -x; /sbin/iptables -t mangle -I FORWARD -d %s.kozachuk.info -j MARK --set-mark %d; }''' \
-                                      % (iptcache, host.name, host.name, mark.value))
-                        limited = True
+                            if not (rest_adds is not None and rest_adds.get(host.name, 0) > 0):
+                                mark = account.mark
+                                for curmark in Mark:
+                                    if mark == curmark: continue
+                                    cmd('''%s | grep -q -w '%s.kozachuk.info.*MARK set %s' && { set -x; /sbin/iptables -t mangle -D FORWARD -s %s.kozachuk.info -j MARK --set-mark %d; }''' \
+                                              % (iptcache, host.name, hex(curmark.value), host.name, curmark.value))
+                                    cmd('''%s | grep -q -w '%s.kozachuk.info.*MARK set %s' && { set -x; /sbin/iptables -t mangle -D FORWARD -d %s.kozachuk.info -j MARK --set-mark %d; }''' \
+                                              % (iptcache, host.name, hex(curmark.value), host.name, curmark.value))
+                                cmd('''%s | grep -q '\\<%s.kozachuk.info\\>.*anywhere' || { set -x; /sbin/iptables -t mangle -I FORWARD -s %s.kozachuk.info -j MARK --set-mark %d; }''' \
+                                          % (iptcache, host.name, host.name, mark.value))
+                                cmd('''%s | grep -q 'anywhere.*\\<%s.kozachuk.info\\>' || { set -x; /sbin/iptables -t mangle -I FORWARD -d %s.kozachuk.info -j MARK --set-mark %d; }''' \
+                                          % (iptcache, host.name, host.name, mark.value))
+                                limited = True
                         if percent >= 120 and not account.no_hardlimit:
                             for host in account.hosts:
-                                cmd('''%s | grep -q "REJECT.*%s.kozachuk.info.*anywhere" || { set -x; /sbin/iptables -t filter -I FORWARD -s %s.kozachuk.info -j REJECT; }''' \
-                                          % (ipfcache, host.name, host.name))
-                                cmd('''%s | grep -q "REJECT.*anywhere.*%s.kozachuk.info" || { set -x; /sbin/iptables -t filter -I FORWARD -d %s.kozachuk.info -j REJECT; }''' \
-                                          % (ipfcache, host.name, host.name))
-                            hardlimited = True
+                                if not (rest_adds is not None and rest_adds.get(host.name, 0) > 0):
+                                    cmd('''%s | grep -q "REJECT.*%s.kozachuk.info.*anywhere" || { set -x; /sbin/iptables -t filter -I FORWARD -s %s.kozachuk.info -j REJECT; }''' \
+                                              % (ipfcache, host.name, host.name))
+                                    cmd('''%s | grep -q "REJECT.*anywhere.*%s.kozachuk.info" || { set -x; /sbin/iptables -t filter -I FORWARD -d %s.kozachuk.info -j REJECT; }''' \
+                                              % (ipfcache, host.name, host.name))
+                                    hardlimited = True
                         break
             for host in account.hosts:
-                if not limited or (rest_adds is not None and rest_adds.get(host.name, 0) > 0):
+                if not limited:
                     for mark in Mark:
                         cmd('''%s | grep -q -w '%s.kozachuk.info' && { set -x; /sbin/iptables -t mangle -D FORWARD -s %s.kozachuk.info -j MARK --set-mark %d >/dev/null 2>&1; }''' \
                                   % (iptcache, host.name, host.name, mark.value))
                         cmd('''%s | grep -q -w '%s.kozachuk.info' && { set -x; /sbin/iptables -t mangle -D FORWARD -d %s.kozachuk.info -j MARK --set-mark %d >/dev/null 2>&1; }''' \
                                   % (iptcache, host.name, host.name, mark.value))
             for host in account.hosts:
-                if not hardlimited or (rest_adds is not None and rest_adds.get(host.name, 0) > 0):
+                if not hardlimited:
                     cmd('''%s | grep -q "REJECT.*%s.kozachuk.info.*anywhere" && { set -x; /sbin/iptables -t filter -D FORWARD -s %s.kozachuk.info/32 -j REJECT; }''' \
                               % (ipfcache, host.name, host.name))
                     cmd('''%s | grep -q "REJECT.*anywhere.*%s.kozachuk.info" && { set -x; /sbin/iptables -t filter -D FORWARD -d %s.kozachuk.info/32 -j REJECT; }''' \

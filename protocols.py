@@ -116,7 +116,14 @@ class Account(Protocol):
     def no_hardlimit(self) -> bool: ...
     def amount(self, limit_name: str) -> int: ...
 
-AddsEntry = Tuple[datetime, str, str, Optional[str], Union[timedelta, int]]
+#AddsEntry = Tuple[datetime, str, str, Optional[str], Union[timedelta, int]]
+class AddsEntry(NamedTuple):
+    date: datetime
+    add_type: str
+    router: str
+    host: Optional[str]
+    amount: Union[timedelta, int]
+
 class Additionals(object):
     def __init__(self, adds_path: str) -> None: ...
     @property

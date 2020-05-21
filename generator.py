@@ -203,13 +203,13 @@ class TestDataGenerator(object):
                 adds_start = datetime(tmp.year, tmp.month, tmp.day, tmp.hour, tmp.minute)
                 if adds_type == 'boost':
                     adds_hours = random.randint(3, 17)
-                    self.adds.append((adds_start, adds_type, adds_router, None, timedelta(hours = adds_hours)))
+                    self.adds.append(p.AddsEntry(adds_start, adds_type, adds_router, None, timedelta(hours = adds_hours)))
                     fd.write('{} boost {} {}h\n'.format(adds_start.strftime('%Y-%m-%d %H:%M'),
                                                         adds_router, adds_hours))
                 elif adds_type == 'data':
                     adds_host = random.choice(self.hosts)
                     adds_amount = units2bytes(bytes2units(random.randint(1*MiB, 30*GiB)))
-                    self.adds.append((adds_start, adds_type, adds_router, adds_host, adds_amount))
+                    self.adds.append(p.AddsEntry(adds_start, adds_type, adds_router, adds_host, adds_amount))
                     fd.write('{} data {} {} {}\n'.format(adds_start.strftime('%Y-%m-%d %H:%M'),
                                                          adds_router, adds_host,
                                                          bytes2units(adds_amount)))

@@ -22,13 +22,13 @@ class Additionals(protocols.Additionals):
                 if ma_boost:
                     numhours = int(ma_boost.group(7))
                     if router not in self._adds: self._adds[router] = []
-                    self._adds[router].append((dt(year, month, day, hour, minute), 'boost', router, None, td(hours = numhours)))
+                    self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'boost', router, None, td(hours = numhours)))
                     continue
                 if ma_cont:
                     host = ma_cont.group(7)
                     amount = units2bytes(float(ma_cont.group(8)), Units[ma_cont.group(9).upper()])
                     if router not in self._adds: self._adds[router] = []
-                    self._adds[router].append((dt(year, month, day, hour, minute), 'data', router, host, int(amount)))
+                    self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'data', router, host, int(amount)))
                     continue
 
     @property
