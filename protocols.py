@@ -118,8 +118,8 @@ class Account(Protocol):
 
 #AddsEntry = Tuple[datetime, str, str, Optional[str], Union[timedelta, int]]
 class AddsEntry(NamedTuple):
-    date: datetime
-    add_type: str
+    ts: datetime
+    atype: str
     router: str
     host: Optional[str]
     amount: Union[timedelta, int]

@@ -13,7 +13,7 @@ class Additionals(protocols.Additionals):
             for line in fd:
                 line = line.strip()
                 ma_boost = re.match(r'^([0-9]+)-([0-9]+)-([0-9]+)\s+([0-9]+):([0-9]+)\s+boost\s+([a-z0-9]+)\s+([0-9]+)\s*h(.*)$', line)
-                ma_cont = re.match(r'^([0-9]+)-([0-9]+)-([0-9]+)\s+([0-9]+):([0-9]+)\s+data\s+([a-z0-9]+)\s+([a-z0-9]+)\s+([0-9.]+)\s*([kmgtKMGT])i[bB](.*)$', line)
+                ma_cont = re.match(r'^([0-9]+)-([0-9]+)-([0-9]+)\s+([0-9]+):([0-9]+)\s+data\s+([a-z0-9]+)\s+([a-z0-9]+)\s+([0-9.]+)\s*([kmgtpezyKMGTPEZY])i[bB](.*)$', line)
                 if ma_boost: ma_gen = ma_boost
                 elif ma_cont: ma_gen = ma_cont
                 else: continue

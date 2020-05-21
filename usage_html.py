@@ -91,7 +91,7 @@ if child == 0:
     account_usage_hourly = reports.account_usage_periodic(start_ts, router, 31, period = 'hour')
 
     print(pid, mypid, t(), router, 'generate html file to %s' % repr(outfile), flush = True)
-    header = '<a href="usage.html">nihonium</a> <a href="barium.html">barium</a> <a href="mikrotik.html">mikrotik</a> <a href="priv.html">priv</a> <br/>'
+    header = '<a href="usage.html">nihonium</a> <a href="barium.html">barium</a> <a href="mikrotik.html">mikrotik</a> <a href="priv.html">priv</a>  <a href="/cgi-bin/adds_formular.py">additionals</a> <br/>'
     footer = '<div class="bigblock"><h1>TELIA</h1><img src="telia_state.png" alt="Telia state"></div>'
     with open(outfile + ".tmp", 'w') as fd:
         html_report = HtmlReport(router, lnames, accounts, account_usage, host_usage,
