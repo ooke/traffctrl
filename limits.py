@@ -1,7 +1,7 @@
 import re, protocols
 from datetime import timedelta
-from utils import *
-from typing import *
+from utils import bytes2units
+from typing import Tuple, Dict
 
 class Limit(protocols.Limit):
     def __init__(self, name: str, amount: int, period: int):

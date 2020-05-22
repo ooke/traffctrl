@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import *
+from typing import Union, Optional
 from enum import Enum
 
 class Units(Enum):

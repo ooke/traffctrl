@@ -1,5 +1,5 @@
 import protocols
-from typing import *
+from typing import Union, Tuple, cast
 
 class Host(protocols.Host):
     def __init__(self, name: str, ips: Union[Tuple[str, ...], None] = None):

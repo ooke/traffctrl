@@ -1,6 +1,6 @@
-import re, itertools, sys, protocols
-from typing import *
-from utils import *
+import re, protocols
+from typing import Tuple, Dict, List, Optional, Generator
+from utils import units2bytes, Units
 from datetime import datetime as dt, timedelta as td
 from storage import Entry
 from itertools import repeat
@@ -23,14 +23,16 @@ class Additionals(protocols.Additionals):
                 if ma_boost:
                     numhours = int(ma_boost.group(7))
                     if router not in self._adds: self._adds[router] = []
-                    comment = (x if len(x := ma_gen.group(8).strip()) > 0 else None)
+                    comment_str = ma_gen.group(8).strip()
+                    comment = (comment_str if len(comment_str) > 0 else None)
                     self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'boost', router, None, td(hours = numhours), comment))
                     continue
                 if ma_cont:
                     host = ma_cont.group(7)
                     amount = units2bytes(float(ma_cont.group(8)), Units[ma_cont.group(9).upper()])
                     if router not in self._adds: self._adds[router] = []
-                    comment = (x if len(x := ma_gen.group(10).strip()) > 0 else None)
+                    comment_str = ma_gen.group(10).strip()
+                    comment = (comment_str if len(comment_str) > 0 else None)
                     self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'data', router, host, int(amount), comment))
                     continue
 

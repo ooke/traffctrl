@@ -1,18 +1,14 @@
 #!/usr/bin/env python3.8
 
-import unittest, os, random, pickle, sys
+import unittest, os, pickle
 import protocols as p
-from accounts import Account
-from hosts import Host
-from limits import Limit, LimitSet
-from marks import Mark
+from limits import LimitSet
 from storage import Storage
 from additionals import Additionals
 from reports import AccountsReport
 from datetime import datetime as dt, timedelta as td
-from pprint import pp
-from utils import *
-from typing import *
+from utils import bytes2units
+from typing import Dict, Tuple, List, Any
 
 class BasicTests(unittest.TestCase):
     _data_path: str
@@ -100,7 +96,6 @@ class BasicTests(unittest.TestCase):
         ts = self.start_ts - td(days = 1)
         ets = ts + td(minutes = 1)
         entries: List[int] = []
-        rows: List[int] = []
         for row in self.stor._conn.execute('SELECT * FROM data WHERE year = %d AND month = %d AND day = %d AND hour = %d AND minute > %d' \
                                            % (ts.year, ts.month, ts.day, ts.hour, ts.minute)):
             if adds._apply_boost_entries(row, ets, entries) != False:

@@ -1,8 +1,7 @@
 import os
 import protocols as p
-from marks import *
-from typing import *
-from utils import *
+from marks import Mark
+from typing import Dict, Tuple, Optional, Callable, Any
 
 class Filtering(object):
     def __init__(self,
@@ -21,8 +20,6 @@ class Filtering(object):
         iptcache = '''cat %s/iptables.cache''' % directory
         cmd('''/sbin/iptables -t filter -L FORWARD >%s/iptablesf.cache''' % directory)
         ipfcache = '''cat %s/iptablesf.cache''' % directory
-        cmd('''/sbin/iptables -t nat -L >%s/iptables.cache2''' % directory)
-        iptcache2 = '''cat %s/iptables.cache2''' % directory
         for account in self._accounts:
             limited, hardlimited = False, False
             if not account.ignore:

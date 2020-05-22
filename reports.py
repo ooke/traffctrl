@@ -1,8 +1,8 @@
 import sys, time, typing
 import protocols as p
 from datetime import datetime, timedelta
-from utils import *
-from typing import *
+from utils import bytes2units, MiB
+from typing import Tuple, Set, Dict, List, Optional, cast
 
 class AccountsReport(object):
     _limit_names: Tuple[str, ...]
@@ -18,7 +18,6 @@ class AccountsReport(object):
         self._storage = storage
 
     def limits(self) -> Set[p.Limit]:
-        result: Dict[p.Limit, Dict[p.Account, p.Usage]] = {}
         limits_set = set()
         for acc in self._accounts:
             for lname in acc.limit.limit_names:

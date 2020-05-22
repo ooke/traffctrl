@@ -1,14 +1,13 @@
 #!/usr/bin/env python3.8
 
-import random, sys, string, itertools, os, pickle
+import random, sys, string, os, pickle
 import protocols as p
 from accounts import Account
-from limits import Limit, LimitSet
+from limits import LimitSet
 from hosts import Host
 from marks import Mark
-from utils import *
-from typing import *
-from pprint import pprint as pp
+from utils import GiB, KiB, MiB, units2bytes, bytes2units
+from typing import Dict, Union, Tuple, List, Set, cast
 from datetime import datetime, timedelta
 
 ConfigType = Dict[str, Union[int, str, datetime,

@@ -1,12 +1,11 @@
-import protocols
-from limits import LimitSet, Limit
+import protocols as p
 from marks import Mark
-from typing import *
+from typing import Tuple
 
-class Account(protocols.Account):
+class Account(p.Account):
     def __init__(self, short: str, name: str,
-                 hosts: Tuple[protocols.Host, ...],
-                 limit: protocols.LimitSet,
+                 hosts: Tuple[p.Host, ...],
+                 limit: p.LimitSet,
                  mark: Mark,
                  color: str = '#000',
                  ignore: bool = False,
@@ -20,20 +19,20 @@ class Account(protocols.Account):
         self._ignore = ignore
         self._no_hardlimit = no_hardlimit
 
-    def _set_storage(self, storage: protocols.Storage) -> None: self._storage = storage
+    def _set_storage(self, storage: p.Storage) -> None: self._storage = storage
     @property
     def short(self) -> str: return self._short
     @property
     def name(self) -> str: return self._name
     @property
-    def hosts(self) -> Tuple[protocols.Host, ...]: return self._hosts
-    def host_by_name(self, host_name: str) -> protocols.Host:
+    def hosts(self) -> Tuple[p.Host, ...]: return self._hosts
+    def host_by_name(self, host_name: str) -> p.Host:
         for host in self._hosts:
             if host.name == host_name:
                 return host
         raise ValueError('Host with name %s is not in the list.' % repr(host_name))
     @property
-    def limit(self) -> protocols.LimitSet: return self._limit
+    def limit(self) -> p.LimitSet: return self._limit
     @property
     def mark(self) -> Mark: return self._mark
     @property

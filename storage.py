@@ -1,7 +1,7 @@
 import sqlite3, os, pickle, sys, protocols
 from datetime import datetime, timedelta
-from utils import *
-from typing import *
+from utils import ts2filter
+from typing import Tuple, Optional, List, Callable, Any, Generator, Iterable, Union, cast
 
 DataRow = protocols.DataRow
 InputRow = Tuple[int, int, int, int, int, Optional[str]]
