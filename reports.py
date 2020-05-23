@@ -238,7 +238,7 @@ class HtmlReport(object):
         print("</table></div>", file = self._output_stream)
 
     def limits_usage(self) -> None:
-        print('<div class="smallblock"><h2>LIMITS</h2><table><tr><th>&nbsp;</th>',
+        print('<div class="smallblock"><h2>LIMITS</h2><table>',
               file = self._output_stream)
         sum_usage: Dict[str, p.Usage] = {}
         sum_limits: Dict[str, p.Usage] = {}
