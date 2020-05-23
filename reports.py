@@ -377,7 +377,7 @@ if (chart1.data == null) {
     def __call__(self) -> None:
         self.header()
         self.accounts_usage()
-        self.hosts_usage()
         self.limits_usage()
+        self.hosts_usage()
         self.charts()
         self.footer()
