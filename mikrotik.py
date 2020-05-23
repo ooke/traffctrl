@@ -1,12 +1,17 @@
 #!/usr/bin/env python3.8
 
-import sys, time, os, urllib.request, socket
+import sys, time, os, urllib.request, socket, random
 
 URL = "http://%s/accounting/ip.cgi" % sys.argv[1]
-directory = '/service/traffanalyze/data/'
+directory = sys.argv[2]
 curtime = time.localtime()
 data = {}
 dns_cache = {}
+
+def gen_id() -> int:
+    return int(time.time()*10000000000000) * 1000 + random.randint(0, 999)
+def id_str(id: int) -> str:
+    return id.to_bytes(11, 'big').hex()
 
 for row in urllib.request.urlopen(URL):
     src_ip, dst_ip, dat_bytes, dat_pkgs, _, _ = row.decode('utf-8').strip().split(' ')
@@ -32,7 +37,8 @@ for row in urllib.request.urlopen(URL):
         the_name = dst_name.replace('.kozachuk.info', '')
         out = False
     else: continue
-    if the_name not in data: data[the_name] = {'in': 0, 'out': 0, 'pkg': 0}
+    if the_name not in data:
+        data[the_name] = {'in': 0, 'out': 0, 'pkg': 0, 'id': gen_id()}
     if out: data[the_name]['out'] += dat_bytes
     else: data[the_name]['in'] += dat_bytes
     data[the_name]['pkg'] += dat_pkgs
@@ -43,6 +49,10 @@ for hostname, host in data.items():
     if host['in'] == 0 and host['out'] == 0 and host['pkg'] == 0:
         continue
     fname = "%s%s/day_%02d%02d%02d" % (directory, hostname, curtime.tm_year, curtime.tm_mon, curtime.tm_mday)
-    write_data = '%d %d %d %d %d mikrotik\n' % (curtime.tm_hour, curtime.tm_min, host['in'], host['out'], host['pkg'])
-    with open(fname, 'a') as fd:
+    write_data = '%d %d %d %d %d mikrotik %s\n' \
+        % (curtime.tm_hour, curtime.tm_min, host['in'], host['out'], host['pkg'], id_str(host['id']))
+    with open(fname + '.tmp', 'a') as fd:
+        with open(fname) as fdo:
+            fd.write(fdo.read())
         fd.write(write_data)
+    os.rename(fname + '.tmp', fname)

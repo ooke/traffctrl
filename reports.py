@@ -209,6 +209,7 @@ class HtmlReport(object):
             print('<div class="smallblock"><h2>%s</h2>' % limit_name, file = self._output_stream)
             self._print_limit_block(limit_name)
             print("</div>", file = self._output_stream)
+        self.limits_usage()
         print("</div>", file = self._output_stream)
 
     def hosts_usage(self) -> None:
@@ -237,7 +238,7 @@ class HtmlReport(object):
         print("</table></div>", file = self._output_stream)
 
     def limits_usage(self) -> None:
-        print('<div class="midblock"><h1>LIMITS</h1><table><tr><th>&nbsp;</th>',
+        print('<div class="smalblock"><h2>LIMITS</h2><table><tr><th>&nbsp;</th>',
               file = self._output_stream)
         sum_usage: Dict[str, p.Usage] = {}
         sum_limits: Dict[str, p.Usage] = {}
@@ -377,7 +378,7 @@ if (chart1.data == null) {
     def __call__(self) -> None:
         self.header()
         self.accounts_usage()
-        self.limits_usage()
+        #self.limits_usage()
         self.hosts_usage()
         self.charts()
         self.footer()

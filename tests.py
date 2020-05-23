@@ -43,7 +43,7 @@ class BasicTests(unittest.TestCase):
             self.limits = pickle.load(limits_fd)
         with open(os.path.join(self._data_path, 'routers.dat'), 'rb') as routers_fd:
             self.routers = pickle.load(routers_fd)
-        self.stor = Storage(tuple(self.accounts.values()), self._data_path)
+        self.stor = Storage(':memory:', tuple(self.accounts.values()), self._data_path, True)
         self.stor.load_data(self.start_ts, self.days + 1)
         self.adds = Additionals(self._adds_path)
         self.adds_applied = False

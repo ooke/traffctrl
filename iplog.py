@@ -1,9 +1,9 @@
 #!/usr/bin/env python3.8
 
-import sys, time, os, socket
+import sys, os, socket, time, random
 from typing import Dict
 
-directory = '/service/traffanalyze/data/'
+directory = sys.argv[4]
 dns_cache = {}
 host_data: Dict[str, Dict[str, int]] = {}
 last_data = {}
@@ -11,6 +11,11 @@ curtime = time.localtime()
 data_file = sys.argv[2]
 lastusage = sys.argv[1]
 router = sys.argv[3]
+
+def gen_id() -> int:
+    return int(time.time()*100000000000000) * 1000 + random.randint(0, 999)
+def id_str(id: int) -> str:
+    return id.to_bytes(11, 'big').hex()
 
 with open(lastusage) as fd:
     for line in fd:
@@ -33,6 +38,7 @@ with open(data_file) as fd:
         host['out'] = host.get('out', 0) + dat_out
         host['in']  = host.get('in', 0)  + dat_in
         host['pkg'] = host.get('pkg', 0) + dat_pkg
+        host['id'] = gen_id()
 
 with open(lastusage + '.tmp', 'w') as fd:
     new_data: Dict[str, Dict[str, int]] = {}
@@ -54,5 +60,11 @@ for hostname, host in new_data.items():
     except: pass
     if host['in'] == 0 and host['out'] == 0 and host['pkg'] == 0:
         continue
-    with open("%s%s/day_%02d%02d%02d" % (directory, hostname, curtime.tm_year, curtime.tm_mon, curtime.tm_mday), 'a') as fd:
-        fd.write('%d %d %d %d %d %s\n' % (curtime.tm_hour, curtime.tm_min, host['in'], host['out'], host['pkg'], router))
+    fname = "%s%s/day_%02d%02d%02d" \
+        % (directory, hostname, curtime.tm_year, curtime.tm_mon, curtime.tm_mday)
+    with open(fname + '.tmp', 'a') as fd:
+        fd.write('%d %d %d %d %d %s %s\n' \
+                 % (curtime.tm_hour, curtime.tm_min,
+                    host['in'], host['out'], host['pkg'],
+                    router, id_str(host['id'])))
+    os.rename(fname + '.tmp', fname)

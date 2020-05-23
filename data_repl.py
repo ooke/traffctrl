@@ -4,9 +4,8 @@ import sys
 import IPython # type: ignore
 import protocols as p
 from typing import Dict
-from data_config import addsfile, accounts, lnames
+from data_config import accounts, lnames
 from storage import Storage
-from additionals import Additionals
 from reports import AccountsReport
 from datetime import datetime as dt
 
@@ -16,11 +15,9 @@ else: start_ts = dt.strptime(sys.argv[1], "%Y-%m-%d %H:%M")
 days = int(sys.argv[2])
 router = sys.argv[3]
 directory = sys.argv[4]
+db_file = sys.argv[5]
 
-storage = Storage(accounts, directory)
-storage.load_data(start_ts, days)
-additionals = Additionals(addsfile(directory))
-rest_adds = additionals.apply_to_storage(storage)
+storage = Storage(db_file, accounts, directory, False)
 reports = AccountsReport(lnames, accounts, storage)
 host_usage: Dict[str, Dict[p.Host, p.Usage]] = {}
 for limit_name in lnames:

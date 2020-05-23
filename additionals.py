@@ -89,7 +89,8 @@ class Additionals(protocols.Additionals):
         return data['add']
 
     def apply_to_storage(self, store: protocols.Storage,
-    collect_rows: Optional[Dict[protocols.AddsEntry, List[protocols.DataRow]]] = None) -> Dict[str, int]:
+                         collect_rows: Optional[Dict[protocols.AddsEntry, List[protocols.DataRow]]] = None) -> None:
+        store.reset_dat()
         boost_entries: List[int] = []
         for router, add_data in self._adds.items():
             for adds in add_data:
@@ -121,4 +122,4 @@ class Additionals(protocols.Additionals):
                     else: rest_adds[add_host] += res
                     store.update_entries('dat', data_entries)
         del data_entries
-        return rest_adds
+        store.update_rest_adds(rest_adds)
