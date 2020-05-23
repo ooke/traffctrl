@@ -238,13 +238,11 @@ class HtmlReport(object):
         print("</table></div>", file = self._output_stream)
 
     def limits_usage(self) -> None:
-        print('<div class="smalblock"><h2>LIMITS</h2><table><tr><th>&nbsp;</th>',
+        print('<div class="smallblock"><h2>LIMITS</h2><table><tr><th>&nbsp;</th>',
               file = self._output_stream)
         sum_usage: Dict[str, p.Usage] = {}
         sum_limits: Dict[str, p.Usage] = {}
         for limit in self._limit_names:
-            print('<th class="tright">%s</th>' % limit.replace(' ', '&nbsp;'),
-                  end = ' ', file = self._output_stream)
             sum_usage[limit] = p.Usage(limit)
             sum_limits[limit] = p.Usage(limit)
         for account in sorted(self._accounts, key = lambda x: x.short):
@@ -268,23 +266,14 @@ class HtmlReport(object):
         print('<tr class="tright"><th class="tright">SUM</th>', end = ' ', file = self._output_stream)
         for limit in self._limit_names:
             usage = sum_limits[limit]
-            print('<th class="tright">%s</th>' % bytes2units(usage.dat, '&nbsp;'),
-                  end = ' ', file = self._output_stream)
-        print('</tr><tr class="tright"><th class="tright">ADDS</th>', end = ' ', file = self._output_stream)
-        for limit in self._limit_names:
-            usage = sum_usage[limit]
-            print('<th class="tright">%s</th>' \
-                  % bytes2units((usage.inp + usage.out) - usage.dat, '&nbsp;'),
-                  end = ' ', file = self._output_stream)
-        print('</tr><tr class="tright"><th class="tright">USED</th>', end = ' ', file = self._output_stream)
-        for limit in self._limit_names:
-            usage = sum_usage[limit]
+            real_usage = sum_usage[limit]
             print('<th class="tright" title="%s / %s / %s">%s</th>' \
-                  % (bytes2units(usage.inp), bytes2units(usage.out),
-                     bytes2units(usage.inp + usage.out),
+                  % (bytes2units(real_usage.inp + real_usage.out),
+                     bytes2units((real_usage.inp + real_usage.out) - real_usage.dat),
+                     bytes2units(real_usage.dat),
                      bytes2units(usage.dat, '&nbsp;')),
                   end = ' ', file = self._output_stream)
-        print("</tr></table></div>", end = ' ', file = self._output_stream)
+        print("</tr></table></div>", file = self._output_stream)
 
     def charts(self) -> None:
         print("""
