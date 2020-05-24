@@ -116,11 +116,12 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(list(sorted(gen_adds_set)), list(sorted(collect_rows.keys())))
         for adds_name in self.adds.routers:
             for adds in self.adds[adds_name]:
-               if adds not in self.config['adds_rows']: continue
-               for ra, rb in zip(sorted(self.config['adds_rows'][adds]),
-                                 sorted(map(lambda r: (dt(r[2], r[3], r[4], r[5], r[6]), r[11], r[1], r[10]),
-                                            collect_rows[adds]))):
-                   self.assertEqual(ra, rb)
+                if adds not in self.config['adds_rows']: continue
+                for ra, rb in zip(sorted(self.config['adds_rows'][adds]),
+                                  sorted(map(lambda r: (dt(r[2], r[3], r[4], r[5], r[6]), r[11], r[1], r[10]),
+                                             collect_rows[adds]))):
+                    print("%s == %s" % (repr(ra), repr(rb)))
+                    self.assertEqual(ra, rb)
         self.assertEqual(self.config['dat_with_adds'], datsum_after)
 
     def test_60_reports(self) -> None:
