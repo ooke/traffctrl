@@ -52,7 +52,9 @@ for hostname, host in data.items():
     write_data = '%d %d %d %d %d mikrotik %s\n' \
         % (curtime.tm_hour, curtime.tm_min, host['in'], host['out'], host['pkg'], id_str(host['id']))
     with open(fname + '.tmp', 'a') as fd:
-        with open(fname) as fdo:
-            fd.write(fdo.read())
+        try:
+            with open(fname) as fdo:
+                fd.write(fdo.read())
+        except FileNotFoundError: pass
         fd.write(write_data)
     os.rename(fname + '.tmp', fname)

@@ -21,7 +21,7 @@ with open(lastusage) as fd:
     for line in fd:
         hostname, host_in_str, host_out_str, host_pkg_str = line.strip().split(' ')
         host_in, host_out, host_pkg = int(host_in_str), int(host_out_str), int(host_pkg_str)
-        last_data[hostname] = {'in': host_in, 'out': host_out, 'pkg': host_pkg}
+        last_data[hostname] = {'in': host_in, 'out': host_out, 'pkg': host_pkg, 'id': gen_id()}
 
 with open(data_file) as fd:
     for line in fd:
@@ -46,7 +46,8 @@ with open(lastusage + '.tmp', 'w') as fd:
         new_data[hostname] = {}
         if hostname in last_data:
             for k in host.keys():
-                newv = host[k] - last_data[hostname][k]
+                if k == 'id': newv = host[k]
+                else: newv = host[k] - last_data[hostname][k]
                 if newv < 0: newv = 0
                 new_data[hostname][k] = newv
         else:
@@ -63,6 +64,10 @@ for hostname, host in new_data.items():
     fname = "%s%s/day_%02d%02d%02d" \
         % (directory, hostname, curtime.tm_year, curtime.tm_mon, curtime.tm_mday)
     with open(fname + '.tmp', 'a') as fd:
+        try:
+            with open(fname) as fdo:
+                fd.write(fdo.read())
+        except FileNotFoundError: pass
         fd.write('%d %d %d %d %d %s %s\n' \
                  % (curtime.tm_hour, curtime.tm_min,
                     host['in'], host['out'], host['pkg'],
