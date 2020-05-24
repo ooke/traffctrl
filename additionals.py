@@ -1,14 +1,15 @@
 import re, protocols
-from typing import Tuple, Dict, List, Optional, Generator
+from typing import Tuple, Dict, List, Optional, Generator, cast
 from utils import units2bytes, Units
 from datetime import datetime as dt, timedelta as td
 from storage import Entry
-from itertools import repeat
 
 class Additionals(protocols.Additionals):
     def __init__(self, adds_path: str) -> None:
         self._adds: Dict[str, List[protocols.AddsEntry]] = {}
+        self._end_ts: Dict[protocols.AddsEntry, dt] = {}
         self._entry = Entry()
+        self._min_ts = dt.now()
         with open(adds_path) as fd:
             for line in fd:
                 line = line.strip()
@@ -19,13 +20,16 @@ class Additionals(protocols.Additionals):
                 else: continue
                 year, month, day = int(ma_gen.group(1)), int(ma_gen.group(2)), int(ma_gen.group(3))
                 hour, minute, router = int(ma_gen.group(4)), int(ma_gen.group(5)), ma_gen.group(6)
+                ts = dt(year, month, day, hour, minute)
+                if self._min_ts > ts:
+                    self._min_ts = ts
                 comment: Optional[str]
                 if ma_boost:
                     numhours = int(ma_boost.group(7))
                     if router not in self._adds: self._adds[router] = []
                     comment_str = ma_gen.group(8).strip()
                     comment = (comment_str if len(comment_str) > 0 else None)
-                    self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'boost', router, None, td(hours = numhours), comment))
+                    self._adds[router].append(protocols.AddsEntry(ts, 'boost', router, None, td(hours = numhours), comment))
                     continue
                 if ma_cont:
                     host = ma_cont.group(7)
@@ -33,7 +37,7 @@ class Additionals(protocols.Additionals):
                     if router not in self._adds: self._adds[router] = []
                     comment_str = ma_gen.group(10).strip()
                     comment = (comment_str if len(comment_str) > 0 else None)
-                    self._adds[router].append(protocols.AddsEntry(dt(year, month, day, hour, minute), 'data', router, host, int(amount), comment))
+                    self._adds[router].append(protocols.AddsEntry(ts, 'data', router, host, int(amount), comment))
                     continue
 
     @property
@@ -47,79 +51,41 @@ class Additionals(protocols.Additionals):
         for adds in self._adds[router]:
             yield adds
 
-    def _apply_boost_entries(self, row: protocols.DataRow, ets: dt, entries: List[int],
-                             collect_rows: Optional[List[protocols.DataRow]] = None) -> bool:
+    def _apply_adds(self, row: protocols.DataRow) -> bool:
         e = self._entry; e.row = row
-        if e.ts > ets: return False
-        if collect_rows is not None:
-            collect_rows.append(row)
-        entries.append(e.id)
+        for router, add_data in self._adds.items():
+            if router != e.router: continue
+            for add in add_data:
+                if add.atype == 'boost':
+                    if e.ts < add.ts or e.ts > self._end_ts[add] or e.dat == 0:
+                        continue
+                    self._entryids.append((e.id, 0))
+                    if self._collect_rows is not None:
+                        self._collect_rows.setdefault(add, []).append(row)
+            for add in add_data:
+                if add.atype == 'data':
+                    if e.ts < add.ts or self._unused_data[add] == 0 or e.dat == 0:
+                        continue
+                    amount = min(self._unused_data[add], e.dat)
+                    self._unused_data[add] -= amount
+                    self._entryids.append((e.id, e.dat - amount))
+                    if self._collect_rows is not None:
+                        self._collect_rows.setdefault(add, []).append(row)
         return True
-
-    def _apply_boost(self, store: protocols.Storage, ts: dt,
-                     router: str,
-                     duration: td,
-                     entries: List[int],
-                     collect_rows: Optional[List[protocols.DataRow]] = None) -> None:
-        bts, ets = ts, (ts + duration)
-        store.apply_mask(bts, lambda row: self._apply_boost_entries(row, ets, entries, collect_rows),
-                         flt = "router = '%s'" % router)
-    
-    def _apply_data_entries(self, row: protocols.DataRow, ts: dt,
-                            data: Dict[str, int],
-                            entries: List[Tuple[int,int]],
-                            collect_rows: Optional[List[protocols.DataRow]] = None) -> bool:
-        if data['add'] == 0: return False
-        e = self._entry; e.row = row
-        amount = min(data['add'], e.dat)
-        data['add'] -= amount
-        if collect_rows is not None:
-            collect_rows.append(row)
-        entries.append((e.id, e.dat - amount))
-        data['amount'] += amount
-        return True
-
-    def _apply_data(self, store: protocols.Storage, ts: dt,
-                    router: str, host: str, amount: int,
-                    entries: List[Tuple[int, int]],
-                    collect_rows: Optional[List[protocols.DataRow]] = None) -> int:
-        data = {'add': amount, 'amount': 0}
-        store.apply_mask(ts, lambda row: self._apply_data_entries(row, ts, data, entries, collect_rows),
-                         flt = "host = '%s' AND router = '%s'" % (host, router))
-        return data['add']
 
     def apply_to_storage(self, store: protocols.Storage,
                          collect_rows: Optional[Dict[protocols.AddsEntry, List[protocols.DataRow]]] = None) -> None:
         store.reset_dat()
-        boost_entries: List[int] = []
+        self._entryids: List[Tuple[int, int]] = []
+        self._collect_rows = collect_rows
+        self._unused_data: Dict[protocols.AddsEntry, int] = {}
         for router, add_data in self._adds.items():
-            for adds in add_data:
-                add_ts, add_type, _, _, add_duration, _ = adds
-                if add_type == 'boost':
-                    if not isinstance(add_duration, td):
-                        raise RuntimeError('No timedelta defined')
-                    crows = None
-                    if collect_rows is not None:
-                        crows = collect_rows.setdefault(adds, [])
-                    self._apply_boost(store, add_ts, router, add_duration, boost_entries, crows)
-        store.update_entries('dat', zip(boost_entries, repeat(0)))
-        del boost_entries
-        data_entries: List[Tuple[int, int]] = []
-        rest_adds: Dict[str, int] = {}
-        for router, add_data in self._adds.items():
-            for adds in add_data:
-                add_ts, add_type, _, add_host, add_amount, _ = adds
-                if add_type == 'data':
-                    if add_host is None: raise RuntimeError('No host defined')
-                    if not isinstance(add_amount, int):
-                        raise RuntimeError('No amount defined')
-                    crows = None
-                    if collect_rows is not None:
-                        crows = collect_rows.setdefault(adds, [])
-                    res = self._apply_data(store, add_ts, router, add_host, add_amount, data_entries, crows)
-                    if add_host not in rest_adds:
-                        rest_adds[add_host] = res
-                    else: rest_adds[add_host] += res
-                    store.update_entries('dat', data_entries)
-        del data_entries
-        store.update_rest_adds(rest_adds)
+            for add in add_data:
+                self._current_add = add
+                if add.atype == 'boost':
+                    self._end_ts[add] = add.ts + cast(td, add.amount)
+                elif add.atype == 'data':
+                    self._unused_data[add] = cast(int, add.amount)
+                else: raise RuntimeError('Unknown add type.')
+        store.apply_mask(self._min_ts, self._apply_adds)
+        store.update_entries('dat', self._entryids)

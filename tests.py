@@ -79,27 +79,27 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(len(list(self.adds[self.config['test_router']])),
                          self.config['test_router_adds'])
         
-    def test_30_additionals_data_entries(self) -> None:
-        adds = self.adds
-        data = {'add': 30000,  'amount': 0}
-        ts = self.start_ts - td(hours = 3)
-        entries: List[Tuple[int, int]] = []
-        rows: List[Tuple[int, int]] = []
-        for row in self.stor._conn.execute('SELECT * FROM data WHERE year = %d AND month = %d AND day = %d AND hour = %d AND minute >= %d' \
-                                           % (ts.year, ts.month, ts.day, ts.hour, ts.minute)):
-            if adds._apply_data_entries(row, ts, data, entries) != False:
-                rows.append((row[0], row[10]))
-        self.assertEqual(data, {'add': 0, 'amount': 30000})
-
-    def test_40_additionals_boost_entries(self) -> None:
-        adds = self.adds
-        ts = self.start_ts - td(days = 1)
-        ets = ts + td(minutes = 1)
-        entries: List[int] = []
-        for row in self.stor._conn.execute('SELECT * FROM data WHERE year = %d AND month = %d AND day = %d AND hour = %d AND minute > %d' \
-                                           % (ts.year, ts.month, ts.day, ts.hour, ts.minute)):
-            if adds._apply_boost_entries(row, ets, entries) != False:
-                self.assertEqual(tuple(row[2:7]), (ets.year, ets.month, ets.day, ets.hour, ets.minute))
+    #def test_30_additionals_data_entries(self) -> None:
+    #    adds = self.adds
+    #    data = {'add': 30000,  'amount': 0}
+    #    ts = self.start_ts - td(hours = 3)
+    #    entries: List[Tuple[int, int]] = []
+    #    rows: List[Tuple[int, int]] = []
+    #    for row in self.stor._conn.execute('SELECT * FROM data WHERE year = %d AND month = %d AND day = %d AND hour = %d AND minute >= %d' \
+    #                                       % (ts.year, ts.month, ts.day, ts.hour, ts.minute)):
+    #        if adds._apply_data_entries(row, ts, data, entries) != False:
+    #            rows.append((row[0], row[10]))
+    #    self.assertEqual(data, {'add': 0, 'amount': 30000})
+    #
+    #def test_40_additionals_boost_entries(self) -> None:
+    #    adds = self.adds
+    #    ts = self.start_ts - td(days = 1)
+    #    ets = ts + td(minutes = 1)
+    #    entries: List[int] = []
+    #    for row in self.stor._conn.execute('SELECT * FROM data WHERE year = %d AND month = %d AND day = %d AND hour = %d AND minute > %d' \
+    #                                       % (ts.year, ts.month, ts.day, ts.hour, ts.minute)):
+    #        if adds._apply_boost_entries(row, ets, entries) != False:
+    #            self.assertEqual(tuple(row[2:7]), (ets.year, ets.month, ets.day, ets.hour, ets.minute))
 
     def test_50_additionals_entries(self) -> None:
         datsum_before = self.stor._conn.execute('SELECT SUM(dat) FROM data').fetchone()[0]
