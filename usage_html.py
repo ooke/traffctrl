@@ -6,7 +6,7 @@ from storage import Storage
 from reports import AccountsReport, HtmlReport
 from datetime import datetime as dt
 from typing import Dict
-from data_config import accounts, lnames
+from data_config import accounts, lnames, header, footer
 
 timing = time.monotonic()
 def t() -> str: return "%ds" % int(time.monotonic() - timing)
@@ -44,8 +44,6 @@ print(pid, t(), router, 'calculate hourly report', flush = True)
 account_usage_hourly = reports.account_usage_periodic(start_ts, router, 31, period = 'hour')
 
 print(pid, t(), router, 'generate html file to %s' % repr(outfile), flush = True)
-header = '<a href="usage.html">nihonium</a> <a href="barium.html">barium</a> <a href="mikrotik.html">mikrotik</a> <a href="priv.html">priv</a>  <a href="/cgi-bin/adds_formular.py">additionals</a> <br/>'
-footer = '<div class="bigblock"><h1>TELIA</h1><img src="telia_state.png" alt="Telia state"></div>'
 with open(outfile + ".tmp", 'w') as fd:
     html_report = HtmlReport(router, lnames, accounts, account_usage, host_usage,
                              account_usage_daily, account_usage_hourly, storage.rest_adds,
