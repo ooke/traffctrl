@@ -1,4 +1,4 @@
-import re, protocols, time
+import re, protocols
 from typing import Tuple, Dict, List, Optional, Generator, cast
 from utils import units2bytes, Units, ts2filter
 from datetime import datetime as dt, timedelta as td
