@@ -172,13 +172,13 @@ class HtmlReport(object):
 
     def _print_limit_block(self, limit: str) -> None:
         print("<table>", file = self._output_stream)
-        dat_sum, dat_full = 0, 0
+        dat_sum, dat_full, dat_limit = 0, 0, 0
         for account in sorted(self._accounts, key = lambda x: x.short):
             if limit not in self._account_usage or account not in self._account_usage[limit]:
                 usage = p.Usage(account.short)
             else: usage = self._account_usage[limit][account]
-            print('<tr><th class="tright user%s">%s</th><td class="tright" title="%s / %s / %s">%s</td>' \
-                  % (account.short, account.name.replace(' ', '&nbsp;'),
+            print('<tr><th class="tright user%s" title="%s">%s</th><td class="tright" title="%s / %s / %s">%s</td>' \
+                  % (account.short, account.name, account.short,
                      bytes2units(usage.inp), bytes2units(usage.out), bytes2units(usage.dat),
                      bytes2units(usage.inp + usage.out, '&nbsp')),
                   file = self._output_stream)
@@ -197,8 +197,11 @@ class HtmlReport(object):
             if not account.ignore:
                 dat_sum += usage.dat
                 dat_full += usage.inp + usage.out
-        print('<tr><th class="tright">%s</th><td class="tright" title="%s">%s</td><td>&nbsp;</td></tr></table>' \
-              % ("SUM", bytes2units(dat_full), bytes2units(dat_sum)),
+                dat_limit += account.limit(limit).amount
+        percent = dat_sum / dat_limit * 100
+        percent_real = dat_full / dat_limit * 100
+        print('<tr><th class="tright">%s</th><th class="tright" title="%s">%s</th><th title="%s">%s</th></tr></table>' \
+              % ("&nbsp;", bytes2units(dat_full), bytes2units(dat_sum), "%2.0f%%" % percent_real, "%2.0f%%" % percent),
               file = self._output_stream)
     
     def accounts_usage(self) -> None:
@@ -238,7 +241,7 @@ class HtmlReport(object):
         print("</table></div>", file = self._output_stream)
 
     def limits_usage(self) -> None:
-        print('<div class="smallblock"><h2>LIMITS</h2><table>',
+        print('<div class="smallblock"><h2>limits</h2><table>',
               file = self._output_stream)
         sum_usage: Dict[str, p.Usage] = {}
         sum_limits: Dict[str, p.Usage] = {}
@@ -246,8 +249,8 @@ class HtmlReport(object):
             sum_usage[limit] = p.Usage(limit)
             sum_limits[limit] = p.Usage(limit)
         for account in sorted(self._accounts, key = lambda x: x.short):
-            print('<tr class="tright"><th class="tright user%s">%s</th>' \
-                  % (account.short, account.name.replace(' ', '&nbsp;')),
+            print('<tr class="tright"><th class="tright user%s" title="%s">%s</th>' \
+                  % (account.short, account.name, account.short),
                   end = ' ', file = self._output_stream)
             for limit in self._limit_names:
                 if limit not in self._account_usage \
@@ -263,7 +266,7 @@ class HtmlReport(object):
                     sum_usage[limit] += usage
                 sum_limits[limit] += p.Usage('tmp', dat = account.limit(limit).amount)
             print("</tr>", file = self._output_stream)
-        print('<tr class="tright"><th class="tright">SUM</th>', end = ' ', file = self._output_stream)
+        print('<tr class="tright"><th class="tright">&nbsp;</th>', end = ' ', file = self._output_stream)
         for limit in self._limit_names:
             usage = sum_limits[limit]
             real_usage = sum_usage[limit]
@@ -367,7 +370,6 @@ if (chart1.data == null) {
     def __call__(self) -> None:
         self.header()
         self.accounts_usage()
-        #self.limits_usage()
         self.hosts_usage()
         self.charts()
         self.footer()
